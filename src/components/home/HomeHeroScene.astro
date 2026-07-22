@@ -152,14 +152,26 @@ const transparentPlaceholder =
 <style define:vars={{
   lightDesktopPosition: scenes.light.desktopObjectPosition,
   lightMobilePosition: scenes.light.mobileObjectPosition,
+  lightDesktopCropTop: scenes.light.desktopCrop.top,
+  lightDesktopCropBottom: scenes.light.desktopCrop.bottom,
+  lightMobileCropTop: scenes.light.mobileCrop.top,
+  lightMobileCropBottom: scenes.light.mobileCrop.bottom,
   lightMaskStrength: scenes.light.maskStrength,
   darkDesktopPosition: scenes.dark.desktopObjectPosition,
   darkMobilePosition: scenes.dark.mobileObjectPosition,
+  darkDesktopCropTop: scenes.dark.desktopCrop.top,
+  darkDesktopCropBottom: scenes.dark.desktopCrop.bottom,
+  darkMobileCropTop: scenes.dark.mobileCrop.top,
+  darkMobileCropBottom: scenes.dark.mobileCrop.bottom,
   darkMaskStrength: scenes.dark.maskStrength,
 }}>
   .home-hero-scene {
     --scene-desktop-position: var(--lightDesktopPosition);
     --scene-mobile-position: var(--lightMobilePosition);
+    --scene-desktop-crop-top: var(--lightDesktopCropTop);
+    --scene-desktop-crop-bottom: var(--lightDesktopCropBottom);
+    --scene-mobile-crop-top: var(--lightMobileCropTop);
+    --scene-mobile-crop-bottom: var(--lightMobileCropBottom);
     --scene-mask-strength: var(--lightMaskStrength);
     position: absolute;
     z-index: 0;
@@ -172,6 +184,10 @@ const transparentPlaceholder =
   :global(html[data-theme='dark']) .home-hero-scene {
     --scene-desktop-position: var(--darkDesktopPosition);
     --scene-mobile-position: var(--darkMobilePosition);
+    --scene-desktop-crop-top: var(--darkDesktopCropTop);
+    --scene-desktop-crop-bottom: var(--darkDesktopCropBottom);
+    --scene-mobile-crop-top: var(--darkMobileCropTop);
+    --scene-mobile-crop-bottom: var(--darkMobileCropBottom);
     --scene-mask-strength: var(--darkMaskStrength);
   }
 
@@ -197,14 +213,16 @@ const transparentPlaceholder =
       );
   }
 
-  .home-hero-scene__picture,
+  .home-hero-scene__picture {
+    position: absolute;
+    inset-block: calc(-1 * var(--scene-desktop-crop-top)) calc(-1 * var(--scene-desktop-crop-bottom));
+    inset-inline: 0;
+    display: block;
+  }
+
   .home-hero-scene__picture :global(img) {
     width: 100%;
     height: 100%;
-  }
-
-  .home-hero-scene__picture {
-    display: block;
   }
 
   .home-hero-scene__picture--managed[hidden] {
@@ -239,6 +257,10 @@ const transparentPlaceholder =
 
     .home-hero-scene__picture :global(img) {
       object-position: var(--scene-mobile-position);
+    }
+
+    .home-hero-scene__picture {
+      inset-block: calc(-1 * var(--scene-mobile-crop-top)) calc(-1 * var(--scene-mobile-crop-bottom));
     }
   }
 </style>

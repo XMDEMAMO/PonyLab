@@ -6,6 +6,14 @@ export interface HomeHeroSceneConfig {
   alt: string;
   desktopObjectPosition: `${number}% ${number}%`;
   mobileObjectPosition: `${number}% ${number}%`;
+  desktopCrop: {
+    top: `${number}%`;
+    bottom: `${number}%`;
+  };
+  mobileCrop: {
+    top: `${number}%`;
+    bottom: `${number}%`;
+  };
   maskStrength: number;
 }
 
@@ -58,6 +66,8 @@ export const homeConfig = {
       alt: '两位人物站在冷青色植物之间的日间主题插画',
       desktopObjectPosition: '0% 50%',
       mobileObjectPosition: '48% 54%',
+      desktopCrop: { top: '0%', bottom: '0%' },
+      mobileCrop: { top: '0%', bottom: '0%' },
       maskStrength: 0.52,
     },
     dark: {
@@ -65,6 +75,8 @@ export const homeConfig = {
       alt: '带有光环、翅膀和向日葵人物的夜间城市主题插画',
       desktopObjectPosition: '50% 48%',
       mobileObjectPosition: '43% 46%',
+      desktopCrop: { top: '11%', bottom: '10%' },
+      mobileCrop: { top: '6%', bottom: '5%' },
       maskStrength: 0.78,
     },
   },

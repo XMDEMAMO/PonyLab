@@ -123,7 +123,7 @@ pinned: false
 可替换站点资料集中在类型化配置中：
 
 - `src/config/site.ts`：站名、描述、作者、头像、Logo、社交链接、导航和页脚；
-- `src/config/home.ts`：首页文案、终端文本、文章数量、light/dark 场景焦点与蒙版；
+- `src/config/home.ts`：首页文案、终端文本、文章数量、light/dark 场景焦点、静态裁切与蒙版；
 - `src/config/theme.ts`：主题模式、存储 key 和浏览器 theme-color；
 - `src/config/taxonomy.ts`：分类与 Tag 显示名到 URL slug 的映射。
 

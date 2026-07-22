@@ -17,9 +17,22 @@ describe('homeConfig', () => {
       expect(scene.alt.length).toBeGreaterThan(0);
       expect(scene.desktopObjectPosition).toMatch(/%/);
       expect(scene.mobileObjectPosition).toMatch(/%/);
+      expect(scene.desktopCrop.top).toMatch(/%/);
+      expect(scene.desktopCrop.bottom).toMatch(/%/);
+      expect(scene.mobileCrop.top).toMatch(/%/);
+      expect(scene.mobileCrop.bottom).toMatch(/%/);
       expect(scene.maskStrength).toBeGreaterThanOrEqual(0);
       expect(scene.maskStrength).toBeLessThanOrEqual(1);
     }
+
+    expect(homeConfig.heroScenes.light.desktopCrop).toEqual({
+      top: '0%',
+      bottom: '0%',
+    });
+    expect(homeConfig.heroScenes.dark.desktopCrop).toEqual({
+      top: '11%',
+      bottom: '10%',
+    });
   });
 });
 
