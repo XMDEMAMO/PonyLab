@@ -1,0 +1,70 @@
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #e7f0f2;
+  --color-bg-elevated: #f5f9fa;
+  --color-surface: rgb(245 249 250 / 72%);
+  --color-surface-strong: rgb(248 251 252 / 90%);
+  --color-text: #22313a;
+  --color-text-muted: #607580;
+  --color-accent: #6f93a5;
+  --color-accent-secondary: #8e91b5;
+  --color-accent-warm: #d8b84a;
+  --color-border: rgb(74 105 120 / 22%);
+  --color-focus: #365f73;
+  --color-overlay: rgb(20 38 48 / 42%);
+  --color-danger: #a14352;
+  --shadow-sm: 0 4px 14px rgb(42 67 78 / 10%);
+  --shadow-card: 0 18px 50px rgb(42 67 78 / 14%);
+  --shadow-floating: 0 24px 70px rgb(42 67 78 / 20%);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #111a21;
+  --color-bg-elevated: #182630;
+  --color-surface: rgb(28 45 56 / 72%);
+  --color-surface-strong: rgb(31 50 62 / 90%);
+  --color-text: #e5eef1;
+  --color-text-muted: #a6b7bf;
+  --color-accent: #8db7c8;
+  --color-accent-secondary: #aaa6cf;
+  --color-accent-warm: #d8b84a;
+  --color-border: rgb(168 195 205 / 20%);
+  --color-focus: #b7e1ef;
+  --color-overlay: rgb(4 12 18 / 60%);
+  --color-danger: #e18b9a;
+  --shadow-sm: 0 4px 16px rgb(0 0 0 / 18%);
+  --shadow-card: 0 20px 54px rgb(0 0 0 / 26%);
+  --shadow-floating: 0 26px 76px rgb(0 0 0 / 34%);
+}
+
+:root {
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-mono:
+    'Cascadia Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --font-size-body: 1rem;
+  --line-height-body: 1.7;
+  --page-max: 75rem;
+  --prose-max: 72ch;
+  --page-gutter: clamp(1rem, 4vw, 2.5rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.375rem;
+  --radius-pill: 999px;
+  --duration-fast: 160ms;
+  --duration-normal: 280ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-focus) 34%, transparent);
+}
