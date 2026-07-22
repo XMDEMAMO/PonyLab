@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate content paths and frontmatter
+        run: npm run validate:content
+
       - name: Check Astro and TypeScript
         run: npm run check
 
