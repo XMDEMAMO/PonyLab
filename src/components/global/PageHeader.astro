@@ -1,0 +1,73 @@
+---
+export interface Props {
+  title: string;
+  subtitle?: string;
+  eyebrow?: string;
+  count?: number;
+}
+
+const { title, subtitle, eyebrow, count } = Astro.props;
+const hasBreadcrumbs = Astro.slots.has('breadcrumbs');
+---
+
+<header class="page-header">
+  {hasBreadcrumbs && <div class="page-header__breadcrumbs"><slot name="breadcrumbs" /></div>}
+  {eyebrow && <p class="page-header__eyebrow">{eyebrow}</p>}
+  <div class="page-header__title-row">
+    <h1>{title}</h1>
+    {count !== undefined && <span class="page-header__count" aria-label={`共 ${count} 项`}>{count}</span>}
+  </div>
+  {subtitle && <p class="page-header__subtitle">{subtitle}</p>}
+</header>
+
+<style>
+  .page-header {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: clamp(2.5rem, 8vw, 6rem) var(--space-8);
+  }
+
+  .page-header__breadcrumbs,
+  .page-header__eyebrow,
+  .page-header__subtitle {
+    color: var(--color-text-muted);
+  }
+
+  .page-header__eyebrow {
+    font-size: 0.78rem;
+    font-weight: 750;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .page-header__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  h1 {
+    max-width: 18ch;
+    font-size: clamp(2.2rem, 7vw, 4.75rem);
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+  }
+
+  .page-header__count {
+    display: inline-grid;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    padding-inline: var(--space-2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+  }
+
+  .page-header__subtitle {
+    max-width: 62ch;
+    font-size: clamp(1rem, 2vw, 1.15rem);
+  }
+</style>

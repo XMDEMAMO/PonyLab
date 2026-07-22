@@ -11,13 +11,20 @@ html {
 }
 
 body {
-  background: var(--color-bg);
+  min-width: 20rem;
+  background: transparent;
   color: var(--color-text);
   text-rendering: optimizeLegibility;
 }
 
+body,
+button,
 a {
-  color: var(--color-accent);
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--color-focus);
   text-underline-offset: 0.2em;
 }
 
@@ -51,4 +58,8 @@ a {
 
 [hidden] {
   display: none !important;
+}
+
+[id] {
+  scroll-margin-top: calc(var(--site-header-height) + var(--space-4));
 }
