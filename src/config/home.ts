@@ -68,7 +68,7 @@ export const homeConfig = {
       mobileObjectPosition: '48% 54%',
       desktopCrop: { top: '0%', bottom: '0%' },
       mobileCrop: { top: '0%', bottom: '0%' },
-      maskStrength: 0.52,
+      maskStrength: 0.4,
     },
     dark: {
       src: heroSceneDark,

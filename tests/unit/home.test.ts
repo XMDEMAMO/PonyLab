@@ -29,6 +29,7 @@ describe('homeConfig', () => {
       top: '0%',
       bottom: '0%',
     });
+    expect(homeConfig.heroScenes.light.maskStrength).toBe(0.4);
     expect(homeConfig.heroScenes.dark.desktopCrop).toEqual({
       top: '11%',
       bottom: '10%',
