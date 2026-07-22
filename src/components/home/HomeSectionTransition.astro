@@ -1,0 +1,40 @@
+<div class="home-transition" aria-hidden="true">
+  <span>Scroll to notes</span>
+</div>
+
+<style>
+  .home-transition {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    min-height: 5.5rem;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--color-text-muted);
+    background:
+      linear-gradient(180deg, transparent, var(--color-bg) 72%),
+      linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-accent-secondary) 18%, transparent), transparent);
+  }
+
+  .home-transition::before,
+  .home-transition::after {
+    width: min(24vw, 13rem);
+    height: 1px;
+    content: '';
+    background: linear-gradient(90deg, transparent, var(--color-border));
+  }
+
+  .home-transition::after {
+    background: linear-gradient(90deg, var(--color-border), transparent);
+  }
+
+  .home-transition span {
+    padding-inline: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+</style>

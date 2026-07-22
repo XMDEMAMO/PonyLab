@@ -1,0 +1,154 @@
+---
+import { Image } from 'astro:assets';
+
+import defaultCover from '../../assets/placeholders/default-cover.jpg';
+import type { PostRecord } from '../../types/content';
+import { formatContentDate, toArticlePath } from '../../utils/posts';
+
+export interface Props {
+  post: PostRecord;
+}
+
+const { post } = Astro.props;
+const cover = post.data.cover ?? defaultCover;
+const coverAlt = post.data.cover ? (post.data.coverAlt ?? '') : '';
+const articleHref = toArticlePath(post.id);
+---
+
+<article class="post-card">
+  <div class="post-card__cover-frame">
+    <Image
+      class="post-card__cover"
+      src={cover}
+      alt={coverAlt}
+      widths={[480, 720, 960]}
+      sizes="(max-width: 48rem) calc(100vw - 2rem), (max-width: 75rem) 45vw, 35rem"
+      layout="full-width"
+      format="webp"
+      quality={74}
+      loading="lazy"
+    />
+  </div>
+
+  <div class="post-card__body">
+    <div class="post-card__meta">
+      <span>{post.data.category}</span>
+      <time datetime={post.data.pubDate.toISOString()}>{formatContentDate(post.data.pubDate)}</time>
+    </div>
+    <h3><a href={articleHref}>{post.data.title}</a></h3>
+    <p class="post-card__description">{post.data.description}</p>
+    {post.data.tags.length > 0 && (
+      <ul class="post-card__tags" role="list" aria-label="文章标签">
+        {post.data.tags.map((tag) => <li>{tag}</li>)}
+      </ul>
+    )}
+  </div>
+</article>
+
+<style>
+  .post-card {
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .post-card__cover-frame {
+    display: block;
+    overflow: hidden;
+    background: var(--color-bg-elevated);
+  }
+
+  .post-card__cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .post-card__body {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: clamp(1.1rem, 2.5vw, 1.55rem);
+  }
+
+  .post-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  .post-card__meta span {
+    color: var(--color-accent-warm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin-top: var(--space-4);
+    font-size: clamp(1.22rem, 2.2vw, 1.55rem);
+    line-height: 1.28;
+  }
+
+  h3 a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .post-card__description {
+    display: -webkit-box;
+    margin-top: var(--space-3);
+    overflow: hidden;
+    color: var(--color-text-muted);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .post-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: auto;
+    padding-top: var(--space-6);
+  }
+
+  .post-card__tags li {
+    padding: 0.28rem 0.65rem;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .post-card {
+      transition:
+        border-color var(--duration-normal) var(--ease-standard),
+        box-shadow var(--duration-normal) var(--ease-standard),
+        transform var(--duration-normal) var(--ease-standard);
+    }
+
+    .post-card__cover {
+      transition: transform var(--duration-normal) var(--ease-standard);
+    }
+
+    .post-card:hover {
+      border-color: color-mix(in srgb, var(--color-accent) 58%, var(--color-border));
+      box-shadow: var(--shadow-floating);
+      transform: translateY(-0.2rem);
+    }
+
+    .post-card:hover .post-card__cover {
+      transform: scale(1.018);
+    }
+  }
+</style>
