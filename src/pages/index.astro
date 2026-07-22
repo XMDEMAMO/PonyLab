@@ -1,17 +1,104 @@
 ---
-
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../config/site';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title={siteConfig.name} description={siteConfig.description}>
+  <section class="foundation page-shell" aria-labelledby="foundation-title">
+    <div class="foundation__card">
+      <p class="foundation__eyebrow">PonyLab / System ready</p>
+      <h1 id="foundation-title">PonyLab</h1>
+      <p class="foundation__description">
+        全局页面外壳已经就绪。首页主视觉与三阶段内容将在后续阶段接入。
+      </p>
+      <dl class="foundation__status">
+        <div>
+          <dt>语言</dt>
+          <dd>zh-CN</dd>
+        </div>
+        <div>
+          <dt>主题</dt>
+          <dd>Light / Dark / System</dd>
+        </div>
+        <div>
+          <dt>部署路径</dt>
+          <dd>/PonyLab/</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .foundation {
+    display: grid;
+    min-height: calc(100vh - var(--site-header-height) - 6rem);
+    place-items: center;
+    padding-block: clamp(3rem, 10vw, 8rem);
+  }
+
+  .foundation__card {
+    width: min(100%, 48rem);
+    padding: clamp(1.5rem, 5vw, 3.5rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(1rem);
+  }
+
+  .foundation__eyebrow {
+    margin-bottom: var(--space-3);
+    color: var(--color-focus);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(3rem, 12vw, 7rem);
+    line-height: 0.95;
+    letter-spacing: -0.06em;
+  }
+
+  .foundation__description {
+    max-width: 42rem;
+    margin-top: var(--space-6);
+    color: var(--color-text-muted);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+  }
+
+  .foundation__status {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-8) 0 0;
+  }
+
+  .foundation__status div {
+    min-width: 0;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-surface-strong) 74%, transparent);
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
+  dd {
+    margin-top: var(--space-1);
+    overflow-wrap: anywhere;
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+  }
+
+  @media (max-width: 40rem) {
+    .foundation__status {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

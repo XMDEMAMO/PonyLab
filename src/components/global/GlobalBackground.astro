@@ -1,0 +1,76 @@
+---
+export interface Props {
+  mode?: 'home' | 'content';
+}
+
+const { mode = 'content' } = Astro.props;
+---
+
+<div class="global-background" data-background-mode={mode} aria-hidden="true">
+  <div class="global-background__grid"></div>
+  <div class="global-background__glow global-background__glow--primary"></div>
+  <div class="global-background__glow global-background__glow--secondary"></div>
+</div>
+
+<style>
+  .global-background {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      linear-gradient(155deg, var(--color-bg-elevated), transparent 54%),
+      var(--color-bg);
+  }
+
+  .global-background__grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.24;
+    background-image:
+      linear-gradient(var(--color-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+    background-size: 4.5rem 4.5rem;
+    mask-image: linear-gradient(to bottom, rgb(0 0 0 / 65%), transparent 84%);
+  }
+
+  .global-background__glow {
+    position: absolute;
+    width: min(38rem, 70vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: 0.18;
+    filter: blur(5rem);
+  }
+
+  .global-background__glow--primary {
+    top: -18rem;
+    right: -12rem;
+    background: var(--color-accent);
+  }
+
+  .global-background__glow--secondary {
+    bottom: -24rem;
+    left: -16rem;
+    background: var(--color-accent-secondary);
+  }
+
+  [data-background-mode='home'] .global-background__grid {
+    opacity: 0.16;
+  }
+
+  [data-background-mode='home'] .global-background__glow {
+    opacity: 0.13;
+  }
+
+  @media (max-width: 47.99rem) {
+    .global-background__grid {
+      background-size: 3.25rem 3.25rem;
+    }
+
+    .global-background__glow {
+      filter: blur(3.5rem);
+    }
+  }
+</style>

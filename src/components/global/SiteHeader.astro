@@ -1,0 +1,160 @@
+---
+import { siteConfig } from '../../config/site';
+import { isNavigationActive } from '../../utils/navigation';
+import { sitePaths } from '../../utils/paths';
+import MobileNavigation from './MobileNavigation.astro';
+import ThemeController from './ThemeController.astro';
+
+export interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const Logo = siteConfig.logo.component;
+const navigationItems = siteConfig.navigation.map((item) => ({
+  ...item,
+  href: sitePaths.page(item.href),
+  isActive: isNavigationActive(currentPath, item.href, sitePaths),
+}));
+---
+
+<header class="site-header">
+  <div class="site-header__inner page-shell">
+    <a class="site-header__brand" href={sitePaths.page('/')} aria-label="PonyLab 首页">
+      <span class="site-header__logo" aria-hidden="true"><Logo /></span>
+      <span class="site-header__wordmark">{siteConfig.name}</span>
+    </a>
+
+    <nav class="site-header__navigation" aria-label="主导航">
+      <ul role="list">
+        {
+          navigationItems.map((item) => (
+            <li>
+              <a href={item.href} aria-current={item.isActive ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <ThemeController />
+      <MobileNavigation items={navigationItems} />
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    min-height: var(--site-header-height);
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+    backdrop-filter: blur(1rem) saturate(120%);
+  }
+
+  .site-header__inner {
+    display: grid;
+    min-height: var(--site-header-height);
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: clamp(0.75rem, 2vw, 2rem);
+  }
+
+  .site-header__brand {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--color-text);
+    font-weight: 750;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+  }
+
+  .site-header__logo {
+    display: grid;
+    width: 2.35rem;
+    height: 2.35rem;
+    flex: 0 0 auto;
+    place-items: center;
+    overflow: hidden;
+    padding: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: #f5f9fa;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .site-header__logo :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .site-header__navigation {
+    justify-self: center;
+  }
+
+  .site-header__navigation ul {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .site-header__navigation a {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    padding: 0.4rem 0.85rem;
+    color: var(--color-text-muted);
+    font-size: 0.925rem;
+    text-decoration: none;
+    border-radius: var(--radius-pill);
+    transition:
+      color var(--duration-fast) var(--ease-standard),
+      background-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .site-header__navigation a:hover,
+  .site-header__navigation a[aria-current='page'] {
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  .site-header__navigation a[aria-current='page'] {
+    box-shadow: inset 0 0 0 1px var(--color-border);
+  }
+
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
+  @media (max-width: 47.99rem) {
+    .site-header__inner {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .site-header__navigation {
+      display: none;
+    }
+
+    .site-header__wordmark {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 22rem) {
+    .site-header__wordmark {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,236 @@
+---
+export interface MobileNavigationItem {
+  label: string;
+  href: string;
+  isActive: boolean;
+}
+
+export interface Props {
+  items: readonly MobileNavigationItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="mobile-navigation">
+  <button
+    class="mobile-navigation__trigger"
+    type="button"
+    aria-label="打开导航菜单"
+    aria-haspopup="dialog"
+    aria-controls="site-mobile-navigation"
+    aria-expanded="false"
+    data-mobile-nav-trigger
+  >
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg>
+  </button>
+
+  <dialog
+    id="site-mobile-navigation"
+    class="mobile-navigation__dialog"
+    aria-label="移动导航"
+    data-mobile-nav-dialog
+  >
+    <div class="mobile-navigation__dialog-header">
+      <strong>导航</strong>
+      <button
+        class="mobile-navigation__close"
+        type="button"
+        aria-label="关闭导航菜单"
+        data-mobile-nav-close
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="m6 6 12 12M18 6 6 18"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav aria-label="移动导航链接">
+      <ul class="mobile-navigation__list" role="list">
+        {
+          items.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={item.isActive ? 'page' : undefined}
+                data-mobile-nav-link
+              >
+                <span>{item.label}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </dialog>
+
+  <noscript>
+    <nav class="mobile-navigation__fallback" aria-label="无脚本导航">
+      <ul role="list">
+        {
+          items.map((item) => (
+            <li>
+              <a href={item.href} aria-current={item.isActive ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </noscript>
+</div>
+
+<script>
+  interface ModalOpenDetail {
+    source?: string;
+  }
+
+  const trigger = document.querySelector<HTMLButtonElement>(
+    '[data-mobile-nav-trigger]',
+  );
+  const dialog = document.querySelector<HTMLDialogElement>(
+    '[data-mobile-nav-dialog]',
+  );
+  const closeButton = dialog?.querySelector<HTMLButtonElement>(
+    '[data-mobile-nav-close]',
+  );
+
+  if (trigger && dialog && closeButton) {
+    const root = document.documentElement;
+
+    const closeDialog = (): void => {
+      if (dialog.open) dialog.close();
+    };
+
+    trigger.addEventListener('click', () => {
+      window.dispatchEvent(
+        new CustomEvent<ModalOpenDetail>('ponylab:modal-open', {
+          detail: { source: 'navigation' },
+        }),
+      );
+      dialog.showModal();
+      root.classList.add('is-dialog-open');
+      trigger.setAttribute('aria-expanded', 'true');
+      closeButton.focus();
+    });
+
+    closeButton.addEventListener('click', closeDialog);
+    dialog.querySelectorAll('[data-mobile-nav-link]').forEach((link) => {
+      link.addEventListener('click', closeDialog);
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) closeDialog();
+    });
+    dialog.addEventListener('close', () => {
+      root.classList.remove('is-dialog-open');
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.focus();
+    });
+    window.addEventListener('ponylab:modal-open', (event) => {
+      const detail = (event as CustomEvent<ModalOpenDetail>).detail;
+      if (detail?.source !== 'navigation') closeDialog();
+    });
+  }
+</script>
+
+<style>
+  .mobile-navigation {
+    display: none;
+  }
+
+  .mobile-navigation__trigger,
+  .mobile-navigation__close {
+    display: inline-grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    padding: 0;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+  }
+
+  .mobile-navigation svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  .mobile-navigation__dialog {
+    width: min(calc(100% - 2rem), 25rem);
+    max-width: none;
+    padding: 0;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-strong);
+    box-shadow: var(--shadow-floating);
+  }
+
+  .mobile-navigation__dialog::backdrop {
+    background: var(--color-overlay);
+    backdrop-filter: blur(0.35rem);
+  }
+
+  .mobile-navigation__dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-navigation__list {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  .mobile-navigation__list a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    color: var(--color-text);
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+  }
+
+  .mobile-navigation__list a[aria-current='page'] {
+    color: var(--color-focus);
+    border-color: var(--color-border);
+    background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  }
+
+  .mobile-navigation__fallback ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-strong);
+  }
+
+  .mobile-navigation__fallback a {
+    color: var(--color-text);
+  }
+
+  :global(html.is-dialog-open) {
+    overflow: hidden;
+  }
+
+  @media (max-width: 47.99rem) {
+    .mobile-navigation {
+      display: block;
+    }
+  }
+</style>

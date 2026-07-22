@@ -1,0 +1,119 @@
+---
+import '../styles/global.css';
+
+import GlobalBackground from '../components/global/GlobalBackground.astro';
+import SiteFooter from '../components/global/SiteFooter.astro';
+import SiteHeader from '../components/global/SiteHeader.astro';
+import { siteConfig } from '../config/site';
+import { themeConfig } from '../config/theme';
+import { sitePaths } from '../utils/paths';
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string | URL;
+  backgroundMode?: 'home' | 'content';
+  pageClass?: string;
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  canonical,
+  backgroundMode = 'content',
+  pageClass,
+} = Astro.props;
+const documentTitle = title === siteConfig.name ? title : `${title} | ${siteConfig.name}`;
+const canonicalHref = canonical
+  ? new URL(canonical.toString(), Astro.site).toString()
+  : new URL(Astro.url.pathname, Astro.site).toString();
+const faviconHref = sitePaths.asset('favicon.ico');
+const hasOverlay = Astro.slots.has('overlay');
+const themeInitConfig = JSON.stringify({
+  modes: themeConfig.modes,
+  defaultMode: themeConfig.defaultMode,
+  storageKey: themeConfig.storageKey,
+  colors: themeConfig.themeColor,
+}).replaceAll('<', '\\u003c');
+const themeInitScript = `(() => {
+  const config = ${themeInitConfig};
+  const root = document.documentElement;
+  root.dataset.js = 'true';
+  let storedMode = null;
+  try { storedMode = window.localStorage.getItem(config.storageKey); } catch {}
+  const mode = config.modes.includes(storedMode) ? storedMode : config.defaultMode;
+  const resolved = mode === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : mode;
+  root.dataset.themeMode = mode;
+  root.dataset.theme = resolved;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', config.colors[resolved]);
+})();`;
+---
+
+<!doctype html>
+<html
+  lang={siteConfig.language}
+  data-theme="light"
+  data-theme-mode={themeConfig.defaultMode}
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content={themeConfig.themeColor.light} />
+    <link rel="icon" href={faviconHref} sizes="any" type="image/x-icon" />
+    <link rel="canonical" href={canonicalHref} />
+    <title>{documentTitle}</title>
+    <script is:inline set:html={themeInitScript}></script>
+    <slot name="head" />
+  </head>
+  <body class:list={pageClass}>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <GlobalBackground mode={backgroundMode} />
+    <SiteHeader currentPath={Astro.url.pathname} />
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter />
+    {hasOverlay && <div class="global-overlay-slot"><slot name="overlay" /></div>}
+  </body>
+</html>
+
+<style is:global>
+  body > header,
+  body > main,
+  body > footer,
+  body > .global-overlay-slot {
+    position: relative;
+    z-index: 1;
+  }
+
+  .skip-link {
+    position: fixed;
+    z-index: 100;
+    top: var(--space-3);
+    left: var(--page-gutter);
+    padding: var(--space-3) var(--space-4);
+    color: var(--color-bg);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    background: var(--color-focus);
+    transform: translateY(calc(-100% - var(--space-6)));
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
+
+  #main-content {
+    min-height: calc(100vh - var(--site-header-height) - 6rem);
+    outline: none;
+  }
+
+  .global-overlay-slot {
+    z-index: 50;
+  }
+</style>
