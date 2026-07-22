@@ -1,0 +1,67 @@
+---
+export interface Props {
+  lines: readonly string[];
+}
+
+const { lines } = Astro.props;
+---
+
+<div class="terminal" aria-label="终端状态">
+  <div class="terminal__bar" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="terminal__content">
+    {lines.map((line, index) => (
+      <p class:list={{ 'terminal__prompt': index === 0 }}>{line}</p>
+    ))}
+  </div>
+</div>
+
+<style>
+  .terminal {
+    width: min(100%, 31rem);
+    overflow: hidden;
+    color: #eaf4f5;
+    border: 1px solid rgb(190 220 228 / 24%);
+    border-radius: var(--radius-md);
+    background: rgb(7 19 26 / 82%);
+    box-shadow: var(--shadow-card);
+  }
+
+  .terminal__bar {
+    display: flex;
+    gap: 0.38rem;
+    padding: 0.65rem 0.8rem;
+    border-bottom: 1px solid rgb(190 220 228 / 14%);
+    background: rgb(255 255 255 / 4%);
+  }
+
+  .terminal__bar span {
+    width: 0.48rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgb(220 235 238 / 34%);
+  }
+
+  .terminal__bar span:first-child {
+    background: var(--color-accent-warm);
+  }
+
+  .terminal__content {
+    min-height: 5.4rem;
+    padding: 0.85rem 1rem 1rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.76rem, 1.4vw, 0.9rem);
+    line-height: 1.65;
+  }
+
+  .terminal__prompt {
+    color: #d7c766;
+  }
+
+  @media (max-width: 47.99rem) {
+    .terminal {
+      width: min(78%, 18rem);
+    }
+  }
+</style>

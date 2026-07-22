@@ -1,0 +1,115 @@
+---
+export interface Props {
+  eyebrow: string;
+  title: string;
+  postCount: number;
+  tagCount: number;
+  postLabel: string;
+  tagLabel: string;
+}
+
+const {
+  eyebrow,
+  title,
+  postCount,
+  tagCount,
+  postLabel,
+  tagLabel,
+} = Astro.props;
+const stats = [
+  { label: postLabel, value: postCount },
+  { label: tagLabel, value: tagCount },
+] as const;
+---
+
+<section class="site-stats" aria-labelledby="site-stats-title">
+  <header>
+    <p>{eyebrow}</p>
+    <h2 id="site-stats-title">{title}</h2>
+  </header>
+  <dl>
+    {stats.map((stat) => (
+      <div>
+        <dt>{stat.label}</dt>
+        <dd>{stat.value}</dd>
+      </div>
+    ))}
+  </dl>
+</section>
+
+<style>
+  .site-stats {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.8fr);
+    align-items: end;
+    gap: var(--space-8);
+    padding: clamp(1.5rem, 5vw, 3rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 54%),
+      var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  header p {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    max-width: 13ch;
+    margin-top: var(--space-2);
+    font-size: clamp(1.8rem, 4vw, 3.2rem);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  dl div {
+    display: grid;
+    min-width: 0;
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-bg-elevated) 58%, transparent);
+  }
+
+  dd {
+    grid-row: 1;
+    font-family: var(--font-mono);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  dt {
+    grid-row: 2;
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .site-stats {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 25rem) {
+    dl {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

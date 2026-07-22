@@ -1,0 +1,165 @@
+---
+import { Image } from 'astro:assets';
+
+import type { SiteConfig } from '../../config/site';
+
+export interface Props {
+  author: SiteConfig['author'];
+  statusLabel: string;
+  statusText: string;
+  actionLabel: string;
+  actionHref: string;
+}
+
+const {
+  author,
+  statusLabel,
+  statusText,
+  actionLabel,
+  actionHref,
+} = Astro.props;
+---
+
+<article class="profile-card" data-home-reading-step="profile">
+  <div class="profile-card__header">
+    <Image
+      class="profile-card__avatar"
+      src={author.avatar}
+      alt={author.avatarAlt}
+      width={112}
+      height={112}
+      format="webp"
+      quality={78}
+      loading="eager"
+    />
+    <div>
+      <p class="profile-card__label">Profile / 02</p>
+      <h2>{author.name}</h2>
+    </div>
+  </div>
+
+  <p class="profile-card__bio">{author.bio}</p>
+
+  <div class="profile-card__status">
+    <span class="profile-card__status-dot" aria-hidden="true"></span>
+    <span><strong>{statusLabel}</strong> · {statusText}</span>
+  </div>
+
+  <a class="profile-card__action" href={actionHref}>{actionLabel}<span aria-hidden="true">↗</span></a>
+</article>
+
+<style>
+  .profile-card {
+    width: min(100%, 27rem);
+    align-self: end;
+    justify-self: end;
+    padding: clamp(1.25rem, 2.8vw, 2rem);
+    color: var(--color-text);
+    border: 1px solid color-mix(in srgb, var(--color-border) 78%, white 12%);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
+    box-shadow: var(--shadow-floating);
+    backdrop-filter: blur(1rem) saturate(108%);
+  }
+
+  .profile-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .profile-card__avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    flex: 0 0 auto;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 60%, white 16%);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .profile-card__label {
+    color: var(--color-accent-warm);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin-top: 0.25rem;
+    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    line-height: 1.2;
+  }
+
+  .profile-card__bio {
+    margin-top: var(--space-6);
+    color: var(--color-text-muted);
+    line-height: 1.75;
+  }
+
+  .profile-card__status {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-bg-elevated) 66%, transparent);
+    font-size: 0.86rem;
+  }
+
+  .profile-card__status strong {
+    color: var(--color-text);
+  }
+
+  .profile-card__status-dot {
+    width: 0.55rem;
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    margin-top: 0.42rem;
+    border-radius: 50%;
+    background: var(--color-accent-warm);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-accent-warm) 18%, transparent);
+  }
+
+  .profile-card__action {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    padding-inline: var(--space-4);
+    color: var(--color-text);
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+
+  @media (max-width: 47.99rem) {
+    .profile-card {
+      width: min(100%, 24rem);
+      justify-self: end;
+      backdrop-filter: blur(0.75rem) saturate(108%);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .profile-card__action {
+      transition:
+        border-color var(--duration-fast) var(--ease-standard),
+        background-color var(--duration-fast) var(--ease-standard),
+        transform var(--duration-fast) var(--ease-standard);
+    }
+
+    .profile-card__action:hover {
+      border-color: color-mix(in srgb, var(--color-accent) 68%, var(--color-border));
+      background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+      transform: translateY(-1px);
+    }
+  }
+</style>
