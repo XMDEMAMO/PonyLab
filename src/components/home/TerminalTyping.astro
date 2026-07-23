@@ -77,6 +77,7 @@ const sessionSummary = config.sessions
 
       while (true) {
         const currentSession = sessions[index];
+        output.textContent = '';
         root.dataset.terminalSessionIndex = String(index);
         root.dataset.terminalState = 'typing-command';
         await typeText(command, currentSession.command);

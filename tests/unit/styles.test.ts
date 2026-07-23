@@ -1,11 +1,24 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 
 import { describe, expect, it } from 'vitest';
 
 const stylesDirectory = new URL('../../src/styles/', import.meta.url);
+const sourceDirectory = new URL('../../src/', import.meta.url);
 
 async function readStyleSheet(name: string): Promise<string> {
   return readFile(new URL(name, stylesDirectory), 'utf8');
+}
+
+async function readStyleSources(directory: URL): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const sources = await Promise.all(entries.map(async (entry) => {
+    const entryUrl = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);
+    if (entry.isDirectory()) return readStyleSources(entryUrl);
+    if (!entry.name.endsWith('.astro') && !entry.name.endsWith('.css')) return [];
+    return [await readFile(entryUrl, 'utf8')];
+  }));
+
+  return sources.flat();
 }
 
 describe('design tokens', () => {
@@ -57,6 +70,26 @@ describe('design tokens', () => {
     ]) {
       expect(tokens).toContain(`${token}:`);
     }
+  });
+
+  it('defines every global design token referenced by component styles', async () => {
+    const [tokens, sources] = await Promise.all([
+      readStyleSheet('tokens.css'),
+      readStyleSources(sourceDirectory),
+    ]);
+    const definedTokens = new Set(
+      [...tokens.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]),
+    );
+    const globalToken = /^--(?:color|shadow|space|radius|duration|ease|font|page|prose|site|focus|line-height)(?:-|$)/;
+    const referencedTokens = new Set(
+      sources.flatMap((source) =>
+        [...source.matchAll(/var\((--[a-z0-9-]+)/g)]
+          .map((match) => match[1])
+          .filter((token) => globalToken.test(token)),
+      ),
+    );
+
+    expect([...referencedTokens].filter((token) => !definedTokens.has(token))).toEqual([]);
   });
 });
 

@@ -10,6 +10,9 @@ node_modules/
 playwright-report/
 test-results/
 
+# local agent execution scratch
+.superpowers/
+
 # logs
 debug.log
 npm-debug.log*

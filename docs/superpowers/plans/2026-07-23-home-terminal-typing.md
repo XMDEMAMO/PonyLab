@@ -26,6 +26,7 @@
 - Modify: `tests/unit/p5-contract.test.ts`
 - Modify: `src/config/home.ts`
 - Modify: `src/components/home/HeroTitle.astro`
+- Modify: `src/components/home/TerminalTyping.astro`（仅 Props 与第一组静态回退）
 - Modify: `src/pages/index.astro`
 
 **Interfaces:**
@@ -72,7 +73,7 @@ export interface TerminalTypingConfig {
 }
 ```
 
-Use the exact three sessions above and timing values `42`, `180`, `1800`, and `260` milliseconds. Update `HeroTitle.astro` and `index.astro` to pass the single `terminal` object without duplicating fields.
+Use the exact three sessions above and timing values `42`, `180`, `1800`, and `260` milliseconds. Update `HeroTitle.astro` and `index.astro` to pass the single `terminal` object without duplicating fields. Update `TerminalTyping.astro` to accept `config: TerminalTypingConfig` and render `config.sessions[0]` as its complete static fallback; Task 2 owns all runtime selectors and the client loop.
 
 - [ ] **Step 4: Verify the typed flow**
 

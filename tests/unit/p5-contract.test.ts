@@ -122,5 +122,12 @@ describe('homepage terminal configuration flow', () => {
     expect(terminalTyping).toContain("root.dataset.terminalState = 'static'");
     expect(terminalTyping).toContain("root.dataset.terminalEnhanced === 'true'");
     expect(terminalTyping).toContain('[...text]');
+
+    const clearPreviousOutput = terminalTyping.indexOf("output.textContent = '';");
+    const startTypingCommand = terminalTyping.indexOf(
+      "root.dataset.terminalState = 'typing-command';",
+    );
+    expect(clearPreviousOutput).toBeGreaterThan(-1);
+    expect(clearPreviousOutput).toBeLessThan(startTypingCommand);
   });
 });

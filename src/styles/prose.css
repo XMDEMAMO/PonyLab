@@ -44,7 +44,7 @@
 .article-prose li + li { margin-top: 0.35rem; }
 
 .article-prose a {
-  color: var(--color-accent-strong);
+  color: var(--color-accent);
   text-underline-offset: 0.22em;
 }
 
