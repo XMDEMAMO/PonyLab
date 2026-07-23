@@ -25,40 +25,47 @@ const { headings, variant } = Astro.props;
 )}
 
 <script>
-  const tocRoots = [...document.querySelectorAll<HTMLElement>('[data-article-toc]')];
-  const tocLinks = tocRoots.flatMap((root) => [...root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')]);
-  const headingIds = [...new Set(tocLinks.map((link) => decodeURIComponent(link.hash.slice(1))))];
-  const headings = headingIds.flatMap((id) => {
-    const heading = document.getElementById(id);
-    return heading ? [heading] : [];
-  });
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
 
-  const setCurrentHeading = (id: string) => {
-    for (const link of tocLinks) {
-      const current = decodeURIComponent(link.hash.slice(1)) === id;
-      if (current) link.setAttribute('aria-current', 'location');
-      else link.removeAttribute('aria-current');
-    }
-  };
-
-  if (headings.length > 0 && 'IntersectionObserver' in window) {
-    const visible = new Map<string, number>();
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) visible.set(entry.target.id, entry.boundingClientRect.top);
-        else visible.delete(entry.target.id);
-      }
-
-      const firstVisible = [...visible.entries()].sort((left, right) => left[1] - right[1])[0];
-      if (firstVisible) setCurrentHeading(firstVisible[0]);
-    }, {
-      rootMargin: '-18% 0px -68% 0px',
-      threshold: [0, 1],
+  registerClientLifecycle('article-toc', () => {
+    const tocRoots = [...document.querySelectorAll<HTMLElement>('[data-article-toc]')];
+    const tocLinks = tocRoots.flatMap((root) => [...root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')]);
+    const headingIds = [...new Set(tocLinks.map((link) => decodeURIComponent(link.hash.slice(1))))];
+    const headings = headingIds.flatMap((id) => {
+      const heading = document.getElementById(id);
+      return heading ? [heading] : [];
     });
+    let observer: IntersectionObserver | undefined;
 
-    headings.forEach((heading) => observer.observe(heading));
-    setCurrentHeading(headings[0]!.id);
-  }
+    const setCurrentHeading = (id: string) => {
+      for (const link of tocLinks) {
+        const current = decodeURIComponent(link.hash.slice(1)) === id;
+        if (current) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
+    };
+
+    if (headings.length > 0 && 'IntersectionObserver' in window) {
+      const visible = new Map<string, number>();
+      observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.set(entry.target.id, entry.boundingClientRect.top);
+          else visible.delete(entry.target.id);
+        }
+
+        const firstVisible = [...visible.entries()].sort((left, right) => left[1] - right[1])[0];
+        if (firstVisible) setCurrentHeading(firstVisible[0]);
+      }, {
+        rootMargin: '-18% 0px -68% 0px',
+        threshold: [0, 1],
+      });
+
+      headings.forEach((heading) => observer?.observe(heading));
+      setCurrentHeading(headings[0]!.id);
+    }
+
+    return () => observer?.disconnect();
+  });
 </script>
 
 <style>

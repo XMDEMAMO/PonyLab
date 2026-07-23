@@ -72,9 +72,14 @@ describe('blog pagination and URL state', () => {
     ).toEqual({ tag: 'astro', category: 'notes', page: 3 });
     expect(
       parseBlogSearchParams(
+        new URLSearchParams('q=%E5%86%85%E5%AE%B9%E9%9B%86%E5%90%88&page=2'),
+      ),
+    ).toEqual({ q: '内容集合', page: 2 });
+    expect(
+      parseBlogSearchParams(
         new URLSearchParams('tag=unknown&category=missing&page=-4&q=ignored'),
       ),
-    ).toEqual({ page: 1 });
+    ).toEqual({ q: 'ignored', page: 1 });
   });
 
   it('serializes a stable progressive-enhancement query and omits page one', () => {
@@ -85,6 +90,9 @@ describe('blog pagination and URL state', () => {
         page: 2,
       }).toString(),
     ).toBe('tag=astro&category=technology&page=2');
+    expect(
+      serializeBlogSearchParams({ q: '  Astro 内容  ', page: 1 }).toString(),
+    ).toBe('q=Astro+%E5%86%85%E5%AE%B9');
     expect(serializeBlogSearchParams({ page: 1 }).toString()).toBe('');
   });
 });

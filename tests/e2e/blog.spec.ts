@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { installClipboardMock } from './helpers/clipboard';
 
 const fixturePosts = Array.from({ length: 10 }, (_, index) => ({
   id: `fixture-${index + 1}`,
@@ -72,12 +73,9 @@ test.describe('blog progressive enhancement', () => {
   });
 
   test('combines filters, restores history, clears state, and copies the share URL', async ({
-    context,
     page,
   }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
-      origin: 'http://127.0.0.1:4321',
-    });
+    await installClipboardMock(page);
     await page.goto('./blog/');
 
     await page.locator('[data-filter-kind="tag"][data-filter-value="typescript"]').click();

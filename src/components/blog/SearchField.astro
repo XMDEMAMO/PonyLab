@@ -1,0 +1,73 @@
+<form class="search-field" data-search-form role="search">
+  <label for="blog-search">全文搜索</label>
+  <div class="search-field__control">
+    <input
+      id="blog-search"
+      type="search"
+      name="q"
+      maxlength="120"
+      autocomplete="off"
+      placeholder="搜索标题、摘要和文章正文"
+      aria-describedby="blog-search-guidance blog-search-runtime"
+      data-search-input
+    />
+    <button type="submit">搜索</button>
+  </div>
+  <p id="blog-search-guidance" class="search-field__guidance" data-search-guidance>
+    正式构建使用 Pagefind 中文全文索引；开发服务器提供标题、摘要和标签的轻量预览。
+  </p>
+  <p id="blog-search-runtime" class="search-field__runtime" data-search-runtime aria-live="polite"></p>
+</form>
+
+<style>
+  .search-field {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  label {
+    color: var(--color-text);
+    font-weight: 750;
+  }
+
+  .search-field__control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+
+  input,
+  button {
+    min-height: 2.85rem;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-surface-strong) 92%, transparent);
+  }
+
+  input {
+    width: 100%;
+    padding-inline: var(--space-4);
+  }
+
+  button {
+    padding-inline: var(--space-5);
+    font-weight: 750;
+  }
+
+  .search-field__guidance,
+  .search-field__runtime {
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+  }
+
+  .search-field__runtime:empty {
+    display: none;
+  }
+
+  @media (max-width: 31.99rem) {
+    .search-field__control {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,83 @@
+<button class="back-to-top" type="button" data-back-to-top hidden aria-label="返回页面顶部">
+  <span aria-hidden="true">↑</span>
+</button>
+
+<script>
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
+
+  registerClientLifecycle('back-to-top', () => {
+    const button = document.querySelector<HTMLButtonElement>('[data-back-to-top]');
+    if (!button) return undefined;
+
+    const controller = new AbortController();
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+
+    const update = (): void => {
+      frame = 0;
+      const scrolling = document.scrollingElement ?? document.documentElement;
+      const range = scrolling.scrollHeight - window.innerHeight;
+      button.hidden =
+        range < 640 ||
+        window.scrollY < Math.min(640, window.innerHeight * 0.75) ||
+        document.documentElement.classList.contains('is-dialog-open');
+    };
+
+    const schedule = (): void => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    button.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: reducedMotion.matches ? 'auto' : 'smooth',
+      });
+    }, { signal: controller.signal });
+    window.addEventListener('scroll', schedule, { passive: true, signal: controller.signal });
+    window.addEventListener('resize', schedule, { passive: true, signal: controller.signal });
+    window.addEventListener('ponylab:modal-open', schedule, { signal: controller.signal });
+    update();
+
+    return () => {
+      controller.abort();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  });
+</script>
+
+<style>
+  .back-to-top {
+    position: fixed;
+    z-index: 40;
+    right: max(var(--space-5), env(safe-area-inset-right));
+    bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+    display: grid;
+    width: 2.85rem;
+    height: 2.85rem;
+    place-items: center;
+    padding: 0;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-surface-strong) 90%, transparent);
+    box-shadow: var(--shadow-floating);
+    backdrop-filter: blur(0.75rem);
+  }
+
+  .back-to-top[hidden] { display: none; }
+
+  @media (max-width: 47.99rem) {
+    .back-to-top {
+      right: max(var(--space-3), env(safe-area-inset-right));
+      bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back-to-top { transition: none; }
+  }
+
+  @media print {
+    .back-to-top { display: none; }
+  }
+</style>

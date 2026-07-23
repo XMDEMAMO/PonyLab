@@ -1,45 +1,57 @@
 <script>
-  const article = document.querySelector<HTMLElement>('[data-article-content]');
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
 
-  const copyText = async (text: string) => {
-    if (!navigator.clipboard?.writeText) {
-      throw new Error('Clipboard API is unavailable.');
-    }
+  registerClientLifecycle('article-code', () => {
+    const article = document.querySelector<HTMLElement>('[data-article-content]');
+    const controller = new AbortController();
+    const timers = new Set<number>();
 
-    await navigator.clipboard.writeText(text);
-  };
-
-  article?.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
-    if (pre.dataset.copyEnhanced === 'true' || !pre.querySelector('code')) return;
-
-    const shell = document.createElement('div');
-    const button = document.createElement('button');
-    shell.className = 'code-block-shell';
-    button.className = 'code-copy-button';
-    button.type = 'button';
-    button.textContent = '复制';
-    button.setAttribute('aria-label', '复制代码');
-    pre.dataset.copyEnhanced = 'true';
-    pre.before(shell);
-    shell.append(pre, button);
-
-    button.addEventListener('click', async () => {
-      const code = pre.querySelector('code')?.textContent ?? '';
-
-      try {
-        await copyText(code);
-        button.textContent = '已复制';
-        button.setAttribute('aria-label', '代码已复制');
-      } catch {
-        button.textContent = '复制失败';
-        button.setAttribute('aria-label', '代码复制失败');
+    const copyText = async (text: string) => {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API is unavailable.');
       }
+      await navigator.clipboard.writeText(text);
+    };
 
-      window.setTimeout(() => {
-        button.textContent = '复制';
-        button.setAttribute('aria-label', '复制代码');
-      }, 1_800);
+    article?.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
+      if (pre.dataset.copyEnhanced === 'true' || !pre.querySelector('code')) return;
+
+      const shell = document.createElement('div');
+      const button = document.createElement('button');
+      shell.className = 'code-block-shell';
+      button.className = 'code-copy-button';
+      button.type = 'button';
+      button.textContent = '复制';
+      button.setAttribute('aria-label', '复制代码');
+      pre.dataset.copyEnhanced = 'true';
+      pre.before(shell);
+      shell.append(pre, button);
+
+      button.addEventListener('click', async () => {
+        const code = pre.querySelector('code')?.textContent ?? '';
+
+        try {
+          await copyText(code);
+          button.textContent = '已复制';
+          button.setAttribute('aria-label', '代码已复制');
+        } catch {
+          button.textContent = '复制失败';
+          button.setAttribute('aria-label', '代码复制失败');
+        }
+
+        const timer = window.setTimeout(() => {
+          timers.delete(timer);
+          button.textContent = '复制';
+          button.setAttribute('aria-label', '复制代码');
+        }, 1_800);
+        timers.add(timer);
+      }, { signal: controller.signal });
     });
+
+    return () => {
+      controller.abort();
+      timers.forEach(window.clearTimeout);
+    };
   });
 </script>
 

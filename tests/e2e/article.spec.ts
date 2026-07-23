@@ -1,14 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { installClipboardMock } from './helpers/clipboard';
 
 const articlePath = './blog/astro/ponylab-content-foundation/';
 
 test('renders the nested article route, metadata, TOC, code, table, and math', async ({
-  context,
   page,
 }) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
-    origin: 'http://127.0.0.1:4321',
-  });
+  await installClipboardMock(page);
   const response = await page.goto(articlePath);
 
   expect(response?.status()).toBe(200);

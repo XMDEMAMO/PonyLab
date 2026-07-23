@@ -44,5 +44,5 @@ const readingTime = calculateReadingTime(post.body ?? '');
   readingTime={readingTime}
   adjacent={adjacent}
 >
-  <MarkdownContent><Content /></MarkdownContent>
+  <MarkdownContent postId={post.id}><Content /></MarkdownContent>
 </ArticleLayout>

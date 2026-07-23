@@ -30,7 +30,10 @@ const { counts, total } = Astro.props;
 </section>
 
 <script>
-  document.querySelectorAll<HTMLElement>('[data-project-explorer]').forEach((root) => {
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
+
+  registerClientLifecycle('project-filter', () => {
+    document.querySelectorAll<HTMLElement>('[data-project-explorer]').forEach((root) => {
     if (root.dataset.enhanced === 'true') return;
 
     const filter = root.querySelector<HTMLElement>('[data-project-filter]');
@@ -69,6 +72,7 @@ const { counts, total } = Astro.props;
       button.addEventListener('click', () => {
         applyFilter(button.dataset.projectFilterValue ?? 'all');
       });
+    });
     });
   });
 </script>
