@@ -26,7 +26,8 @@ export default defineConfig({
   webServer: usesExternalPreview
     ? undefined
     : {
-        command: 'npm run preview -- --host 127.0.0.1 --port 4321',
+        command:
+          'node ./node_modules/astro/bin/astro.mjs preview --host 127.0.0.1 --port 4321',
         url: projectBaseUrl,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

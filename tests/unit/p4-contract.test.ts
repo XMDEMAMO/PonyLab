@@ -37,7 +37,7 @@ describe('P4 homepage boundary', () => {
     ).resolves.toEqual(expectedFiles.map(() => true));
   });
 
-  it('keeps P5 and optional enhancements out of the P4 implementation', async () => {
+  it('keeps optional enhancements out of the core implementation', async () => {
     const packageJson = JSON.parse(await readProjectFile('package.json')) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
@@ -59,13 +59,9 @@ describe('P4 homepage boundary', () => {
       await Promise.all(sourceFiles.map((pathname) => readProjectFile(pathname)))
     ).join('\n');
 
-    expect(await projectFileExists('src/components/home/HomeScrollScene.astro')).toBe(
-      false,
-    );
     expect(source).not.toContain('ClientRouter');
     expect(source).not.toContain('GlobalMusicPlayer');
     expect(source).not.toContain('ScrollProgressControl');
-    expect(source).not.toContain('requestAnimationFrame');
     expect(packageJson.scripts).not.toHaveProperty('build:search');
     expect(packageJson.dependencies).not.toHaveProperty('pagefind');
     expect(packageJson.devDependencies).not.toHaveProperty('pagefind');

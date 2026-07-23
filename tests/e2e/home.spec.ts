@@ -37,6 +37,25 @@ async function readScene(page: Page): Promise<SceneSnapshot> {
   });
 }
 
+async function scrollHomeSceneTo(page: Page, progress: number): Promise<void> {
+  await page.locator('[data-home-scroll-scene]').evaluate((root, targetProgress) => {
+    const sticky = root.querySelector<HTMLElement>('[data-home-scroll-visual]');
+    if (!sticky) throw new Error('Missing home scroll visual');
+
+    const rootBox = root.getBoundingClientRect();
+    const stickyBox = sticky.getBoundingClientRect();
+    const stickyTop = Number.parseFloat(getComputedStyle(sticky).top) || 0;
+    const documentTop = window.scrollY + rootBox.top;
+    const travel = rootBox.height - stickyBox.height;
+
+    window.scrollTo(0, documentTop - stickyTop + (travel * targetProgress));
+  }, progress);
+
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+  );
+}
+
 test('renders the P4 content in title, profile, and content order', async ({ page }) => {
   await page.goto('./');
 
@@ -45,6 +64,11 @@ test('renders the P4 content in title, profile, and content order', async ({ pag
   const latest = page.getByRole('heading', { level: 2, name: '最新文章' });
 
   await expect(title).toBeVisible();
+  await expect(page.locator('[data-home-profile-layer]')).toHaveAttribute(
+    'aria-hidden',
+    'true',
+  );
+  await scrollHomeSceneTo(page, 0.48);
   await expect(profile).toBeVisible();
   await expect(latest).toBeVisible();
   expect(
@@ -164,7 +188,7 @@ for (const viewport of responsiveCases) {
           : theme === 'light' ? '0% 50%' : '50% 48%',
       );
 
-      if (titleBox && profileBox) {
+      if (titleBox && profileBox && viewport.width >= 768) {
         const overlaps = !(
           titleBox.x + titleBox.width <= profileBox.x ||
           profileBox.x + profileBox.width <= titleBox.x ||
@@ -172,6 +196,24 @@ for (const viewport of responsiveCases) {
           profileBox.y + profileBox.height <= titleBox.y
         );
         expect(overlaps).toBe(false);
+      }
+
+      if (viewport.width < 768 && viewport.height >= 608) {
+        const titleLayer = page.locator('[data-home-title-layer]');
+        const profileLayer = page.locator('[data-home-profile-layer]');
+        await expect(profileLayer).toHaveAttribute('aria-hidden', 'true');
+        expect(
+          await titleLayer.evaluate((element) => Number(getComputedStyle(element).opacity)),
+        ).toBeGreaterThan(0.95);
+
+        await scrollHomeSceneTo(page, 0.48);
+        await expect(profileLayer).toHaveAttribute('aria-hidden', 'false');
+        expect(
+          await titleLayer.evaluate((element) => Number(getComputedStyle(element).opacity)),
+        ).toBeLessThan(0.05);
+        expect(
+          await profileLayer.evaluate((element) => Number(getComputedStyle(element).opacity)),
+        ).toBeGreaterThan(0.9);
       }
       await expect(image).toHaveAttribute('alt', /插画/);
     });
