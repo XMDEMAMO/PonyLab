@@ -72,7 +72,7 @@ describe('P5 homepage scroll boundary', () => {
     ]);
 
     expect(reportExists).toBe(true);
-    expect(readme).toContain('P1—P5');
+    expect(readme).toContain('此前完成的 P5 首页三阶段滚动');
     expect(readme).toContain('HomeScrollScene');
     expect(readme).toContain('p5-home-scroll-report.md');
   });

@@ -1,0 +1,79 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+
+import EmptyState from '../../components/blog/EmptyState.astro';
+import PostList from '../../components/blog/PostList.astro';
+import TagFilter from '../../components/blog/TagFilter.astro';
+import PageHeader from '../../components/global/PageHeader.astro';
+import { categories, type TaxonomyEntry } from '../../config/taxonomy';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCategoryCounts, getTagCounts } from '../../utils/blog';
+import { sitePaths } from '../../utils/paths';
+import { filterPublishedPosts, sortPosts } from '../../utils/posts';
+
+interface Props {
+  category: TaxonomyEntry;
+  posts: CollectionEntry<'blog'>[];
+  allPosts: CollectionEntry<'blog'>[];
+}
+
+export async function getStaticPaths() {
+  const allPosts = sortPosts(filterPublishedPosts(await getCollection('blog')));
+
+  return categories.map((category) => ({
+    params: { category: category.slug },
+    props: {
+      category,
+      allPosts,
+      posts: allPosts.filter((post) => post.data.category === category.displayName),
+    },
+  }));
+}
+
+const { category, posts, allPosts } = Astro.props;
+const tagCounts = getTagCounts(allPosts);
+const categoryCounts = getCategoryCounts(allPosts);
+---
+
+<BaseLayout title={category.displayName} description={`浏览 PonyLab 的${category.displayName}分类文章。`}>
+  <div class="page-shell taxonomy-page">
+    <PageHeader
+      eyebrow="Notebook / Category"
+      title={category.displayName}
+      subtitle={category.description ?? '按主题整理的独立静态分类页。'}
+      count={posts.length}
+    >
+      <nav slot="breadcrumbs" aria-label="面包屑">
+        <a href={sitePaths.page('/blog/')}>博客</a><span aria-hidden="true"> / </span><span>分类</span>
+      </nav>
+    </PageHeader>
+
+    <TagFilter tags={tagCounts} categories={categoryCounts} selectedCategory={category.slug} />
+    <div class="taxonomy-page__results">
+      {posts.length > 0 ? (
+        <PostList posts={posts} ariaLabel={`${category.displayName}分类文章`} />
+      ) : (
+        <EmptyState
+          hidden={false}
+          title="这个分类下还没有文章"
+          description="分类入口已经建立，内容发布后会自动出现在这里。"
+        />
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .taxonomy-page {
+    padding-bottom: clamp(4rem, 9vw, 7rem);
+  }
+
+  .taxonomy-page__results {
+    margin-top: var(--space-8);
+  }
+
+  nav {
+    color: var(--color-text-muted);
+  }
+</style>

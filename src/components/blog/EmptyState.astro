@@ -1,0 +1,49 @@
+---
+export interface Props {
+  title?: string;
+  description?: string;
+  hidden?: boolean;
+}
+
+const {
+  title = '没有符合条件的文章',
+  description = '可以清空筛选，或从归档页浏览全部已发布内容。',
+  hidden = true,
+} = Astro.props;
+---
+
+<div class="empty-state" data-blog-empty hidden={hidden} role="status">
+  <span aria-hidden="true">∅</span>
+  <h2>{title}</h2>
+  <p>{description}</p>
+</div>
+
+<style>
+  .empty-state {
+    display: grid;
+    min-height: 18rem;
+    place-content: center;
+    padding: var(--space-8);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface) 62%, transparent);
+  }
+
+  span {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 2rem;
+  }
+
+  h2 {
+    margin-top: var(--space-3);
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+  }
+
+  p {
+    max-width: 34rem;
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+  }
+</style>

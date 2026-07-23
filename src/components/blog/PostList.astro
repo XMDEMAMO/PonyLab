@@ -1,0 +1,22 @@
+---
+import type { PostRecord } from '../../types/content';
+import PostCard from './PostCard.astro';
+
+export interface Props {
+  posts: readonly PostRecord[];
+  ariaLabel?: string;
+}
+
+const { posts, ariaLabel = '文章列表' } = Astro.props;
+---
+
+<div class="post-list" data-post-list aria-label={ariaLabel}>
+  {posts.map((post) => <PostCard post={post} variant="list" />)}
+</div>
+
+<style>
+  .post-list {
+    display: grid;
+    gap: var(--space-6);
+  }
+</style>

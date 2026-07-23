@@ -1,0 +1,36 @@
+<nav class="pagination" data-pagination hidden aria-label="文章分页">
+  <button type="button" data-page-previous>上一页</button>
+  <span data-pagination-status aria-live="polite">第 1 / 1 页</span>
+  <button type="button" data-page-next>下一页</button>
+</nav>
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+  }
+
+  button {
+    min-height: 2.75rem;
+    padding-inline: var(--space-4);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-strong);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  span {
+    min-width: 6rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>

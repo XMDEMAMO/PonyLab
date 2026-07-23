@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+
+import ArchiveList from '../components/blog/ArchiveList.astro';
+import EmptyState from '../components/blog/EmptyState.astro';
+import PageHeader from '../components/global/PageHeader.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { groupPostsByArchive } from '../utils/blog';
+import { sitePaths } from '../utils/paths';
+import { filterPublishedPosts } from '../utils/posts';
+
+const posts = filterPublishedPosts(await getCollection('blog'));
+const groups = groupPostsByArchive(posts);
+---
+
+<BaseLayout title="归档" description="按年月浏览 PonyLab 的全部已发布文章。">
+  <div class="page-shell archive-page">
+    <PageHeader
+      eyebrow="Notebook / Archive"
+      title="文章归档"
+      subtitle="归档只按发布日期排列，不受首页置顶顺序影响。"
+      count={posts.length}
+    >
+      <nav slot="breadcrumbs" aria-label="面包屑">
+        <a href={sitePaths.page('/blog/')}>博客</a><span aria-hidden="true"> / </span><span>归档</span>
+      </nav>
+    </PageHeader>
+
+    {groups.length > 0 ? (
+      <ArchiveList groups={groups} />
+    ) : (
+      <EmptyState
+        hidden={false}
+        title="归档仍是空的"
+        description="第一篇文章发布后，会按年份和月份自动归档。"
+      />
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .archive-page {
+    padding-bottom: clamp(4rem, 9vw, 7rem);
+  }
+
+  nav {
+    color: var(--color-text-muted);
+  }
+</style>

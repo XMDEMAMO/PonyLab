@@ -1,0 +1,197 @@
+---
+import { BLOG_PAGE_SIZE } from '../../utils/blog';
+import { sitePaths } from '../../utils/paths';
+---
+
+<section
+  class="blog-explorer"
+  data-blog-explorer
+  data-page-size={BLOG_PAGE_SIZE}
+  data-blog-url={sitePaths.page('/blog/')}
+  aria-label="文章浏览器"
+>
+  <div class="blog-explorer__toolbar">
+    <slot name="filters" />
+    <slot name="status" />
+  </div>
+  <slot name="posts" />
+  <slot name="empty" />
+  <slot name="pagination" />
+</section>
+
+<script>
+  import {
+    parseBlogSearchParams,
+    serializeBlogSearchParams,
+    type BlogSearchState,
+  } from '../../utils/blog';
+
+  interface FilterableCard extends HTMLElement {
+    dataset: DOMStringMap & {
+      postCategory?: string;
+      postTags?: string;
+    };
+  }
+
+  const initializeBlogExplorer = (explorer: HTMLElement) => {
+    const pageSize = Number(explorer.dataset.pageSize) || 8;
+    const blogUrl = explorer.dataset.blogUrl ?? window.location.pathname;
+    const cards = Array.from(
+      explorer.querySelectorAll<FilterableCard>('[data-blog-post]'),
+    );
+    const list = explorer.querySelector<HTMLElement>('[data-post-list]');
+    const empty = explorer.querySelector<HTMLElement>('[data-blog-empty]');
+    const status = explorer.querySelector<HTMLElement>('[data-filter-status]');
+    const clear = explorer.querySelector<HTMLAnchorElement>('[data-filter-clear]');
+    const copy = explorer.querySelector<HTMLButtonElement>('[data-filter-copy]');
+    const pagination = explorer.querySelector<HTMLElement>('[data-pagination]');
+    const paginationStatus = explorer.querySelector<HTMLElement>('[data-pagination-status]');
+    const previous = explorer.querySelector<HTMLButtonElement>('[data-page-previous]');
+    const next = explorer.querySelector<HTMLButtonElement>('[data-page-next]');
+    const filterLinks = Array.from(
+      explorer.querySelectorAll<HTMLAnchorElement>('[data-filter-kind]'),
+    );
+    let state = parseBlogSearchParams(new URLSearchParams(window.location.search));
+
+    copy?.removeAttribute('hidden');
+
+    const getMatchingCards = () =>
+      cards.filter((card) => {
+        const tagSlugs = card.dataset.postTags?.split(/\s+/).filter(Boolean) ?? [];
+
+        return (
+          (!state.tag || tagSlugs.includes(state.tag)) &&
+          (!state.category || card.dataset.postCategory === state.category)
+        );
+      });
+
+    const render = () => {
+      const matches = getMatchingCards();
+      const totalPages = Math.max(1, Math.ceil(matches.length / pageSize));
+      state.page = Math.min(Math.max(1, state.page), totalPages);
+      const start = (state.page - 1) * pageSize;
+      const visible = new Set(matches.slice(start, start + pageSize));
+
+      for (const card of cards) {
+        card.hidden = !visible.has(card);
+      }
+
+      if (list) list.hidden = matches.length === 0;
+      if (empty) empty.hidden = matches.length !== 0;
+      if (status) {
+        status.textContent = cards.length === 0
+          ? '暂时还没有已发布文章。'
+          : matches.length === 0
+          ? '没有符合当前条件的文章。'
+          : `共 ${matches.length} 篇文章，当前显示第 ${start + 1}–${Math.min(start + pageSize, matches.length)} 篇。`;
+      }
+      if (copy) copy.textContent = '复制当前链接';
+      if (clear) clear.hidden = !state.tag && !state.category;
+      if (pagination) pagination.hidden = matches.length === 0 || totalPages <= 1;
+      if (paginationStatus) paginationStatus.textContent = `第 ${state.page} / ${totalPages} 页`;
+      if (previous) previous.disabled = state.page <= 1;
+      if (next) next.disabled = state.page >= totalPages;
+
+      for (const link of filterLinks) {
+        const kind = link.dataset.filterKind as 'tag' | 'category' | undefined;
+        const value = link.dataset.filterValue;
+        const active = Boolean(kind && value && state[kind] === value);
+
+        link.toggleAttribute('data-active', active);
+        if (active) {
+          link.setAttribute('aria-current', 'true');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      }
+    };
+
+    const commit = (nextState: BlogSearchState, mode: 'push' | 'replace' = 'push') => {
+      state = nextState;
+      render();
+      const params = serializeBlogSearchParams(state).toString();
+      const href = params ? `${blogUrl}?${params}` : blogUrl;
+      window.history[mode === 'push' ? 'pushState' : 'replaceState']({}, '', href);
+    };
+
+    for (const link of filterLinks) {
+      link.addEventListener('click', (event) => {
+        const kind = link.dataset.filterKind as 'tag' | 'category' | undefined;
+        const value = link.dataset.filterValue;
+
+        if (
+          !kind ||
+          !value ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) return;
+        event.preventDefault();
+        commit({
+          ...state,
+          [kind]: state[kind] === value ? undefined : value,
+          page: 1,
+        });
+      });
+    }
+
+    clear?.addEventListener('click', (event) => {
+      event.preventDefault();
+      commit({ page: 1 });
+    });
+
+    previous?.addEventListener('click', () => {
+      commit({ ...state, page: state.page - 1 });
+    });
+
+    next?.addEventListener('click', () => {
+      commit({ ...state, page: state.page + 1 });
+    });
+
+    copy?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        copy.textContent = '链接已复制';
+      } catch {
+        copy.textContent = '复制失败，请复制地址栏链接';
+      }
+    });
+
+    window.addEventListener('popstate', () => {
+      state = parseBlogSearchParams(new URLSearchParams(window.location.search));
+      render();
+    });
+
+    render();
+    commit(state, 'replace');
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-blog-explorer]').forEach(initializeBlogExplorer);
+</script>
+
+<style>
+  .blog-explorer {
+    display: grid;
+    gap: var(--space-8);
+    padding-bottom: clamp(4rem, 9vw, 7rem);
+  }
+
+  .blog-explorer__toolbar {
+    display: grid;
+    gap: var(--space-6);
+    padding: clamp(1rem, 3vw, 1.75rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(0.75rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blog-explorer__toolbar {
+      backdrop-filter: none;
+    }
+  }
+</style>

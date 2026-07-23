@@ -1,10 +1,19 @@
 # PonyLab
 
-PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P5。
+PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P6。
 
 ## 当前状态
 
-P5 已在 P4 静态首页上完成三阶段滚动增强：
+P6 博客浏览已在既有内容基础上完成：
+
+- `/blog/` 输出完整的非草稿文章集合和明显的归档入口，JavaScript 只渐进增强 Tag、分类和每页 8 篇的客户端分页；
+- `/tags/[tag]/`、`/categories/[category]/` 与 `/archive/` 均为可直达、可分享的静态路由，关闭 JavaScript 仍可浏览；
+- URL 状态使用稳定的 `?tag=&category=&page=`，筛选会重置到第一页，并支持清空、复制链接以及浏览器前进/后退恢复；
+- 标签、分类计数、筛选、分页和年月归档共用 `src/utils/blog.ts` 的纯函数，归档按 `zh-CN` 与 `Asia/Hong_Kong` 日期规则排列，不受置顶顺序影响；
+- P4 的同一份 `PostCard` 增加列表变体和静态 taxonomy 链接，没有复制第二套卡片；
+- 响应式筛选胶囊、横卡转纵卡、空状态和 320px 防溢出已完成；P6 没有引入 Pagefind、框架岛或新依赖。
+
+此前完成的 P5 首页三阶段滚动继续保持以下约束：
 
 - light/dark 两套完整首页场景图通过 `astro:assets` 生成响应式 AVIF/WebP；
 - `HomeScrollScene` 使用单个 `requestAnimationFrame` 调度器，将滚动几何映射为可测试的三阶段进度；
@@ -13,11 +22,11 @@ P5 已在 P4 静态首页上完成三阶段滚动增强：
 - reduced motion、低高度横屏和受限设备使用自然流，标题、名片与内容在无 JavaScript 时仍按完整阅读顺序显示；
 - 手机端保留三阶段语义，并按 light/dark 构图分别把名片放在不会遮住主体面部的区域；
 - 首页文章区最多显示 4 篇非草稿文章，并统计已发布文章数与唯一 Tag 数；
-- 基础 `PostCard` 已建立，后续 P6 会在同一组件上扩展博客列表能力。
+- 基础 `PostCard` 已由 P6 原位扩展为首页网格与博客列表共用组件。
 
 仓库目前只有一篇用于验证 Content Collection 的开发草稿，因此生产构建会正确显示首页文章空状态。不会为了填满首页而发布假文章或建立无效详情链接。
 
-尚未实施的核心阶段包括 P6 博客浏览、P7 文章详情、P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
+尚未实施的核心阶段包括 P7 文章详情、P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
 
 ## 技术基线
 
@@ -149,14 +158,14 @@ src/
 ├─ assets/             本地图片源文件，由 astro:assets 优化
 ├─ components/global/  全局页面外壳组件
 ├─ components/home/    P4 静态首页与 P5 三阶段滚动控制
-├─ components/blog/    首页与后续博客共用的 PostCard
+├─ components/blog/    共用文章卡、筛选、分页、空状态与归档组件
 ├─ config/             类型化站点、首页、主题与 taxonomy 配置
 ├─ content/blog/       Markdown 文章
 ├─ layouts/            共享布局
-├─ pages/              Astro 路由入口
+├─ pages/              首页、博客、Tag、分类与归档等 Astro 路由入口
 ├─ styles/             reset、tokens 与全局样式
 ├─ types/              跨模块数据类型
-└─ utils/              路径、内容、日期、阅读时间和首页纯函数
+└─ utils/              路径、内容、日期、阅读时间、首页和博客纯函数
 ```
 
 ## 文档
@@ -167,3 +176,4 @@ src/
 - [P3 全局外壳汇报](docs/stage-reports/p3-global-shell-report.md)
 - [P4 首页静态结构汇报](docs/stage-reports/p4-home-static-report.md)
 - [P5 首页滚动增强汇报](docs/stage-reports/p5-home-scroll-report.md)
+- [P6 博客浏览汇报](docs/stage-reports/p6-blog-browsing-report.md)

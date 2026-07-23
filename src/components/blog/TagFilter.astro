@@ -1,0 +1,135 @@
+---
+import type { TaxonomyCount } from '../../utils/blog';
+import { sitePaths } from '../../utils/paths';
+
+export interface Props {
+  tags: readonly TaxonomyCount[];
+  categories: readonly TaxonomyCount[];
+  selectedTag?: string;
+  selectedCategory?: string;
+  enhanced?: boolean;
+}
+
+const {
+  tags,
+  categories,
+  selectedTag,
+  selectedCategory,
+  enhanced = false,
+} = Astro.props;
+---
+
+<div class="taxonomy-filters" aria-label="文章筛选">
+  <section aria-labelledby="category-filter-title">
+    <h2 id="category-filter-title">分类</h2>
+    <ul role="list">
+      {categories.map((category) => (
+        <li>
+          <a
+            href={sitePaths.page(`/categories/${category.slug}/`)}
+            data-filter-kind={enhanced ? 'category' : undefined}
+            data-filter-value={enhanced ? category.slug : undefined}
+            data-active={selectedCategory === category.slug ? true : undefined}
+            aria-current={selectedCategory === category.slug ? 'page' : undefined}
+          >
+            <span>{category.displayName}</span><small>{category.count}</small>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section aria-labelledby="tag-filter-title">
+    <h2 id="tag-filter-title">标签</h2>
+    <ul role="list">
+      {tags.map((tag) => (
+        <li>
+          <a
+            href={sitePaths.page(`/tags/${tag.slug}/`)}
+            data-filter-kind={enhanced ? 'tag' : undefined}
+            data-filter-value={enhanced ? tag.slug : undefined}
+            data-active={selectedTag === tag.slug ? true : undefined}
+            aria-current={selectedTag === tag.slug ? 'page' : undefined}
+          >
+            <span>#{tag.displayName}</span><small>{tag.count}</small>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</div>
+
+<style>
+  .taxonomy-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-6);
+  }
+
+  section {
+    min-width: 0;
+  }
+
+  h2 {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  a {
+    display: inline-flex;
+    min-height: 2.35rem;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.45rem 0.8rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+  }
+
+  a[data-active],
+  a[aria-current='page'] {
+    color: var(--color-bg-elevated);
+    border-color: var(--color-focus);
+    background: var(--color-focus);
+  }
+
+  small {
+    min-width: 1.2rem;
+    color: inherit;
+    font-family: var(--font-mono);
+    text-align: center;
+    opacity: 0.74;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    a {
+      transition:
+        color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard),
+        background var(--duration-fast) var(--ease-standard);
+    }
+
+    a:hover {
+      color: var(--color-text);
+      border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border));
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .taxonomy-filters {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,83 @@
+---
+import { getCollection } from 'astro:content';
+
+import BlogExplorer from '../../components/blog/BlogExplorer.astro';
+import EmptyState from '../../components/blog/EmptyState.astro';
+import FilterStatus from '../../components/blog/FilterStatus.astro';
+import Pagination from '../../components/blog/Pagination.astro';
+import PostList from '../../components/blog/PostList.astro';
+import TagFilter from '../../components/blog/TagFilter.astro';
+import PageHeader from '../../components/global/PageHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCategoryCounts, getTagCounts } from '../../utils/blog';
+import { sitePaths } from '../../utils/paths';
+import { filterPublishedPosts, sortPosts } from '../../utils/posts';
+
+const posts = sortPosts(filterPublishedPosts(await getCollection('blog')));
+const tagCounts = getTagCounts(posts);
+const categoryCounts = getCategoryCounts(posts);
+---
+
+<BaseLayout
+  title="博客"
+  description="按分类、标签和发布时间浏览 PonyLab 的全部文章。"
+  pageClass="blog-page"
+>
+  <div class="page-shell blog-page__shell">
+    <PageHeader
+      eyebrow="Notebook / Index"
+      title="博客"
+      subtitle="这里保留完整的已发布文章列表；筛选和分页是可选的渐进增强。"
+      count={posts.length}
+    />
+
+    <nav class="blog-page__secondary" aria-label="博客辅助导航">
+      <a href={sitePaths.page('/archive/')}>浏览完整归档 <span aria-hidden="true">→</span></a>
+    </nav>
+
+    <BlogExplorer>
+      <TagFilter
+        slot="filters"
+        tags={tagCounts}
+        categories={categoryCounts}
+        enhanced
+      />
+      <FilterStatus slot="status" total={posts.length} />
+      <PostList slot="posts" posts={posts} />
+      <EmptyState
+        slot="empty"
+        hidden={posts.length > 0}
+        title={posts.length === 0 ? '文章仍在整理中' : undefined}
+        description={posts.length === 0 ? '发布第一篇文章后，这里会自动显示完整列表。' : undefined}
+      />
+      <Pagination slot="pagination" />
+    </BlogExplorer>
+  </div>
+</BaseLayout>
+
+<style>
+  .blog-page__shell {
+    display: grid;
+  }
+
+  .blog-page__secondary {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: calc(-1 * var(--space-4));
+    margin-bottom: var(--space-6);
+  }
+
+  .blog-page__secondary a {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+    color: var(--color-text);
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+  }
+</style>

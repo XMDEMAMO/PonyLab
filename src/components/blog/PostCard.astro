@@ -2,20 +2,35 @@
 import { Image } from 'astro:assets';
 
 import defaultCover from '../../assets/placeholders/default-cover.jpg';
+import { categories, getTaxonomyByName, tags } from '../../config/taxonomy';
 import type { PostRecord } from '../../types/content';
+import { sitePaths } from '../../utils/paths';
 import { formatContentDate, toArticlePath } from '../../utils/posts';
 
 export interface Props {
   post: PostRecord;
+  variant?: 'grid' | 'list';
 }
 
-const { post } = Astro.props;
+const { post, variant = 'grid' } = Astro.props;
 const cover = post.data.cover ?? defaultCover;
 const coverAlt = post.data.cover ? (post.data.coverAlt ?? '') : '';
 const articleHref = toArticlePath(post.id);
+const category = getTaxonomyByName(categories, post.data.category);
+const postTags = post.data.tags.flatMap((name) => {
+  const tag = getTaxonomyByName(tags, name);
+
+  return tag ? [tag] : [];
+});
 ---
 
-<article class="post-card">
+<article
+  class:list={['post-card', `post-card--${variant}`]}
+  data-blog-post
+  data-post-id={post.id}
+  data-post-category={category?.slug}
+  data-post-tags={postTags.map((tag) => tag.slug).join(' ')}
+>
   <div class="post-card__cover-frame">
     <Image
       class="post-card__cover"
@@ -32,14 +47,20 @@ const articleHref = toArticlePath(post.id);
 
   <div class="post-card__body">
     <div class="post-card__meta">
-      <span>{post.data.category}</span>
+      {category ? (
+        <a href={sitePaths.page(`/categories/${category.slug}/`)}>{category.displayName}</a>
+      ) : (
+        <span>{post.data.category}</span>
+      )}
       <time datetime={post.data.pubDate.toISOString()}>{formatContentDate(post.data.pubDate)}</time>
     </div>
     <h3><a href={articleHref}>{post.data.title}</a></h3>
     <p class="post-card__description">{post.data.description}</p>
     {post.data.tags.length > 0 && (
       <ul class="post-card__tags" role="list" aria-label="文章标签">
-        {post.data.tags.map((tag) => <li>{tag}</li>)}
+        {postTags.map((tag) => (
+          <li><a href={sitePaths.page(`/tags/${tag.slug}/`)}>#{tag.displayName}</a></li>
+        ))}
       </ul>
     )}
   </div>
@@ -93,6 +114,14 @@ const articleHref = toArticlePath(post.id);
     text-transform: uppercase;
   }
 
+  .post-card__meta a {
+    color: var(--color-accent-warm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
   h3 {
     margin-top: var(--space-4);
     font-size: clamp(1.22rem, 2.2vw, 1.55rem);
@@ -121,12 +150,27 @@ const articleHref = toArticlePath(post.id);
     padding-top: var(--space-6);
   }
 
-  .post-card__tags li {
+  .post-card__tags a {
+    display: block;
     padding: 0.28rem 0.65rem;
     color: var(--color-text-muted);
+    text-decoration: none;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-pill);
     font-size: 0.72rem;
+  }
+
+  .post-card--list {
+    grid-template-columns: minmax(13rem, 0.72fr) minmax(0, 1.28fr);
+  }
+
+  .post-card--list .post-card__cover-frame,
+  .post-card--list .post-card__cover {
+    height: 100%;
+  }
+
+  .post-card--list .post-card__cover {
+    aspect-ratio: 4 / 3;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -149,6 +193,21 @@ const articleHref = toArticlePath(post.id);
 
     .post-card:hover .post-card__cover {
       transform: scale(1.018);
+    }
+
+    .post-card__meta a:hover,
+    .post-card__tags a:hover {
+      color: var(--color-text);
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .post-card--list {
+      grid-template-columns: 1fr;
+    }
+
+    .post-card--list .post-card__cover {
+      aspect-ratio: 16 / 9;
     }
   }
 </style>
