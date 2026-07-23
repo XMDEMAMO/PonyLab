@@ -9,7 +9,33 @@ describe('homeConfig', () => {
     expect(homeConfig.title).toBe('PonyLab');
     expect(homeConfig.titleLines).toEqual(['Pony', 'Lab']);
     expect(homeConfig.subtitle.length).toBeGreaterThan(0);
-    expect(homeConfig.typingLines.length).toBeGreaterThan(0);
+    expect(homeConfig.terminal.sessions).toEqual([
+      {
+        command: 'ponylab:~$ whoami',
+        output: 'Developer · Learner · Dreamer',
+      },
+      {
+        command: 'ponylab:~$ cat current-focus.txt',
+        output: 'Astro · TypeScript · Frontend',
+      },
+      {
+        command: 'ponylab:~$ echo $STATUS',
+        output: '记录代码，也记录生活。',
+      },
+    ]);
+    expect(homeConfig.terminal.characterIntervalMs).toBe(42);
+    expect(homeConfig.terminal.outputDelayMs).toBe(180);
+    expect(homeConfig.terminal.sessionHoldMs).toBe(1800);
+    expect(homeConfig.terminal.transitionMs).toBe(260);
+
+    for (const timing of [
+      homeConfig.terminal.characterIntervalMs,
+      homeConfig.terminal.outputDelayMs,
+      homeConfig.terminal.sessionHoldMs,
+      homeConfig.terminal.transitionMs,
+    ]) {
+      expect(timing).toBeGreaterThan(0);
+    }
     expect(homeConfig.latestPostCount).toBe(4);
     expect(Object.keys(homeConfig.heroScenes)).toEqual(['light', 'dark']);
 

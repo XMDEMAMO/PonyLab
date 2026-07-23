@@ -77,3 +77,26 @@ describe('P5 homepage scroll boundary', () => {
     expect(readme).toContain('p5-home-scroll-report.md');
   });
 });
+
+describe('homepage terminal configuration flow', () => {
+  it('passes the typed terminal configuration through the title component', async () => {
+    const [heroTitle, homepage, terminalTyping] = await Promise.all([
+      readProjectFile('src/components/home/HeroTitle.astro'),
+      readProjectFile('src/pages/index.astro'),
+      readProjectFile('src/components/home/TerminalTyping.astro'),
+    ]);
+
+    expect(heroTitle).toContain("import type { TerminalTypingConfig } from '../../config/home'");
+    expect(heroTitle).toContain('terminal: TerminalTypingConfig;');
+    expect(heroTitle).toContain('<TerminalTyping config={terminal} />');
+    expect(heroTitle).not.toContain('typingLines');
+    expect(homepage).toContain('terminal={homeConfig.terminal}');
+    expect(homepage).not.toContain('typingLines={homeConfig.typingLines}');
+    expect(terminalTyping).toContain("import type { TerminalTypingConfig } from '../../config/home'");
+    expect(terminalTyping).toContain('config: TerminalTypingConfig;');
+    expect(terminalTyping).toContain('const session = config.sessions[0];');
+    expect(terminalTyping).toContain('{session.command}');
+    expect(terminalTyping).toContain('{session.output}');
+    expect(terminalTyping).not.toContain('lines.map');
+  });
+});

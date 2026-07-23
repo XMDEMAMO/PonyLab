@@ -1,9 +1,12 @@
 ---
+import type { TerminalTypingConfig } from '../../config/home';
+
 export interface Props {
-  lines: readonly string[];
+  config: TerminalTypingConfig;
 }
 
-const { lines } = Astro.props;
+const { config } = Astro.props;
+const session = config.sessions[0];
 ---
 
 <div class="terminal" aria-label="终端状态">
@@ -11,9 +14,8 @@ const { lines } = Astro.props;
     <span></span><span></span><span></span>
   </div>
   <div class="terminal__content">
-    {lines.map((line, index) => (
-      <p class:list={{ 'terminal__prompt': index === 0 }}>{line}</p>
-    ))}
+    <p class="terminal__prompt">{session.command}</p>
+    <p>{session.output}</p>
   </div>
 </div>
 

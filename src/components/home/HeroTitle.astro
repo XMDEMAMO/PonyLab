@@ -1,4 +1,5 @@
 ---
+import type { TerminalTypingConfig } from '../../config/home';
 import TerminalTyping from './TerminalTyping.astro';
 
 export interface Props {
@@ -6,10 +7,10 @@ export interface Props {
   title: string;
   titleLines: readonly string[];
   subtitle: string;
-  typingLines: readonly string[];
+  terminal: TerminalTypingConfig;
 }
 
-const { eyebrow, title, titleLines, subtitle, typingLines } = Astro.props;
+const { eyebrow, title, titleLines, subtitle, terminal } = Astro.props;
 ---
 
 <div class="hero-title" data-home-reading-step="title">
@@ -20,7 +21,7 @@ const { eyebrow, title, titleLines, subtitle, typingLines } = Astro.props;
     ))}
   </h1>
   <p class="hero-title__subtitle">{subtitle}</p>
-  <TerminalTyping lines={typingLines} />
+  <TerminalTyping config={terminal} />
 </div>
 
 <style>

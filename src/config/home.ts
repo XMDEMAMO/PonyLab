@@ -17,12 +17,25 @@ export interface HomeHeroSceneConfig {
   maskStrength: number;
 }
 
+export interface TerminalSessionConfig {
+  command: string;
+  output: string;
+}
+
+export interface TerminalTypingConfig {
+  sessions: readonly TerminalSessionConfig[];
+  characterIntervalMs: number;
+  outputDelayMs: number;
+  sessionHoldMs: number;
+  transitionMs: number;
+}
+
 export interface HomeConfig {
   eyebrow: string;
   title: string;
   titleLines: readonly string[];
   subtitle: string;
-  typingLines: readonly string[];
+  terminal: TerminalTypingConfig;
   latestPostCount: number;
   heroScenes: {
     light: HomeHeroSceneConfig;
@@ -56,10 +69,26 @@ export const homeConfig = {
   title: 'PonyLab',
   titleLines: ['Pony', 'Lab'],
   subtitle: '在冷雾与代码之间，记录技术学习、项目实践与个人兴趣。',
-  typingLines: [
-    'ponylab:~$ whoami',
-    'Developer · Learner · Dreamer_',
-  ],
+  terminal: {
+    sessions: [
+      {
+        command: 'ponylab:~$ whoami',
+        output: 'Developer · Learner · Dreamer',
+      },
+      {
+        command: 'ponylab:~$ cat current-focus.txt',
+        output: 'Astro · TypeScript · Frontend',
+      },
+      {
+        command: 'ponylab:~$ echo $STATUS',
+        output: '记录代码，也记录生活。',
+      },
+    ],
+    characterIntervalMs: 42,
+    outputDelayMs: 180,
+    sessionHoldMs: 1800,
+    transitionMs: 260,
+  },
   latestPostCount: 4,
   heroScenes: {
     light: {
