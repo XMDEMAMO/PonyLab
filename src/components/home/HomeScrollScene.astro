@@ -3,6 +3,8 @@
   data-home-scroll-scene
   data-home-scroll-mode="natural"
   data-home-scroll-stage="all"
+  data-home-motion-state="natural"
+  data-home-scroll-intent="0"
 >
   <div class="home-scroll-scene__sticky" data-home-scroll-visual>
     <slot />
@@ -11,9 +13,11 @@
 
 <script>
   import {
+    advanceHomeScrollIntent,
     deriveHomeScrollProgress,
     getHomeScrollState,
     shouldUseNaturalHomeScroll,
+    type HomeScrollIntentResult,
   } from '../../utils/home-scroll';
 
   const root = document.querySelector<HTMLElement>('[data-home-scroll-scene]');
@@ -26,13 +30,118 @@
       '(max-height: 38rem) and (orientation: landscape)',
     );
     const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
+    const pullThreshold = 260;
+    const intentResetDelay = 260;
+    const profileSnapProgress = 0.48;
     let frameId = 0;
+    let intentState: HomeScrollIntentResult = {
+      amount: 0,
+      direction: null,
+      committed: null,
+    };
+    let intentTimer = 0;
+    let motionTimer = 0;
 
     const setProfileAvailability = (available: boolean) => {
       if (!profileLayer) return;
 
       profileLayer.toggleAttribute('inert', !available);
       profileLayer.setAttribute('aria-hidden', String(!available));
+    };
+
+    const clearIntentTimer = () => {
+      window.clearTimeout(intentTimer);
+      intentTimer = 0;
+    };
+
+    const clearMotionTimer = () => {
+      window.clearTimeout(motionTimer);
+      motionTimer = 0;
+    };
+
+    const resetIntent = () => {
+      clearIntentTimer();
+      intentState = { amount: 0, direction: null, committed: null };
+      root.dataset.homeScrollIntent = '0';
+    };
+
+    const setMotionState = (
+      motion: 'natural' | 'intro' | 'pulling' | 'rebounding' | 'docking' | 'profile' | 'retreating' | 'content',
+    ) => {
+      root.dataset.homeMotionState = motion;
+
+      if (motion === 'natural') {
+        root.dataset.homeScrollStage = 'all';
+        setProfileAvailability(true);
+        return;
+      }
+
+      if (motion === 'docking' || motion === 'profile') {
+        root.dataset.homeScrollStage = '2';
+        setProfileAvailability(motion === 'profile');
+        return;
+      }
+
+      if (motion === 'content') {
+        root.dataset.homeScrollStage = '3';
+        setProfileAvailability(false);
+        return;
+      }
+
+      root.dataset.homeScrollStage = '1';
+      setProfileAvailability(false);
+    };
+
+    const getScrollTarget = (progress: number) => {
+      const rootBox = root.getBoundingClientRect();
+      const stickyBox = sticky.getBoundingClientRect();
+      const stickyTop = Number.parseFloat(getComputedStyle(sticky).top) || 0;
+      const rootTop = window.scrollY + rootBox.top;
+      const travel = Math.max(0, rootBox.height - stickyBox.height);
+
+      return rootTop - stickyTop + (travel * progress);
+    };
+
+    const snapToProgress = (progress: number) => {
+      window.scrollTo(0, getScrollTarget(progress));
+    };
+
+    const commitProfile = () => {
+      resetIntent();
+      clearMotionTimer();
+      setMotionState('docking');
+      snapToProgress(profileSnapProgress);
+      motionTimer = window.setTimeout(() => {
+        setMotionState('profile');
+        motionTimer = 0;
+      }, 2460);
+    };
+
+    const retreatToIntro = () => {
+      resetIntent();
+      clearMotionTimer();
+      setMotionState('retreating');
+      snapToProgress(0);
+      motionTimer = window.setTimeout(() => {
+        setMotionState('intro');
+        motionTimer = 0;
+      }, 820);
+    };
+
+    const scheduleIntentRebound = () => {
+      clearIntentTimer();
+      intentTimer = window.setTimeout(() => {
+        if (root.dataset.homeMotionState !== 'pulling') {
+          resetIntent();
+          return;
+        }
+
+        setMotionState('rebounding');
+        intentTimer = window.setTimeout(() => {
+          resetIntent();
+          setMotionState('intro');
+        }, 430);
+      }, intentResetDelay);
     };
 
     const updateState = () => {
@@ -50,12 +159,21 @@
       });
       const state = getHomeScrollState(progress);
 
-      root.dataset.homeScrollStage = String(state.stage);
       root.style.setProperty('--home-scroll-progress', state.progress.toFixed(4));
-      root.style.setProperty('--home-title-exit', state.titleExit.toFixed(4));
-      root.style.setProperty('--home-profile-enter', state.profileEnter.toFixed(4));
       root.style.setProperty('--home-hero-exit', state.heroExit.toFixed(4));
-      setProfileAvailability(state.profileEnter >= 0.55 && state.heroExit < 0.94);
+
+      const motion = root.dataset.homeMotionState;
+      if (motion === 'pulling' || motion === 'rebounding' || motion === 'docking' || motion === 'retreating') {
+        return;
+      }
+
+      if (state.stage === 3) {
+        setMotionState('content');
+      } else if (state.stage === 2) {
+        setMotionState('profile');
+      } else {
+        setMotionState('intro');
+      }
     };
 
     const scheduleUpdate = () => {
@@ -72,10 +190,11 @@
       });
 
       if (natural) {
+        resetIntent();
+        clearMotionTimer();
         root.dataset.homeScrollMode = 'natural';
-        root.dataset.homeScrollStage = 'all';
         root.removeAttribute('style');
-        setProfileAvailability(true);
+        setMotionState('natural');
         return;
       }
 
@@ -83,8 +202,81 @@
       updateState();
     };
 
+    const normalizeWheelDelta = (event: WheelEvent) => {
+      const scale = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 16
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? window.innerHeight
+          : 1;
+
+      return Math.sign(event.deltaY) * Math.min(96, Math.abs(event.deltaY * scale));
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (root.dataset.homeScrollMode !== 'enhanced' || event.deltaY === 0) return;
+
+      const motion = root.dataset.homeMotionState;
+      if (motion === 'docking' || motion === 'retreating' || motion === 'rebounding') {
+        event.preventDefault();
+        return;
+      }
+
+      const stage = root.dataset.homeScrollStage;
+      const isForwardPull = stage === '1' && event.deltaY > 0;
+      const isBackwardPull = stage === '2' && event.deltaY < 0;
+
+      if (!isForwardPull && !isBackwardPull) {
+        resetIntent();
+        return;
+      }
+
+      event.preventDefault();
+      intentState = advanceHomeScrollIntent(
+        intentState,
+        normalizeWheelDelta(event),
+        pullThreshold,
+      );
+      root.dataset.homeScrollIntent = String(Math.round(intentState.amount));
+
+      if (intentState.committed === 'forward' && stage === '1') {
+        commitProfile();
+        return;
+      }
+
+      if (intentState.committed === 'backward' && stage === '2') {
+        retreatToIntro();
+        return;
+      }
+
+      if (stage === '1') {
+        setMotionState('pulling');
+      }
+      scheduleIntentRebound();
+    };
+
+    const onKeydown = (event: KeyboardEvent) => {
+      if (root.dataset.homeScrollMode !== 'enhanced') return;
+
+      const rootBox = root.getBoundingClientRect();
+      const isActive = rootBox.top < window.innerHeight && rootBox.bottom > 0;
+      if (!isActive) return;
+
+      const forwardKeys = ['ArrowDown', 'PageDown', ' '];
+      const backwardKeys = ['ArrowUp', 'PageUp'];
+
+      if (root.dataset.homeScrollStage === '1' && forwardKeys.includes(event.key)) {
+        event.preventDefault();
+        commitProfile();
+      } else if (root.dataset.homeScrollStage === '2' && backwardKeys.includes(event.key)) {
+        event.preventDefault();
+        retreatToIntro();
+      }
+    };
+
     window.addEventListener('scroll', scheduleUpdate, { passive: true });
     window.addEventListener('resize', scheduleUpdate, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('keydown', onKeydown);
     reducedMotion.addEventListener('change', applyMode);
     shortViewport.addEventListener('change', applyMode);
     applyMode();
@@ -94,8 +286,6 @@
 <style>
   .home-scroll-scene {
     --home-scroll-progress: 0;
-    --home-title-exit: 0;
-    --home-profile-enter: 1;
     --home-hero-exit: 0;
     position: relative;
   }

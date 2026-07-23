@@ -1,10 +1,18 @@
 # PonyLab
 
-PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P6。
+PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P7。
 
 ## 当前状态
 
-P6 博客浏览已在既有内容基础上完成：
+P7 嵌套文章阅读体验已经完成：
+
+- `/blog/[...slug]/` 根据内容文件路径静态生成多层文章 URL，并与 P2 的路径验证、P6 的文章卡和相邻文章排序共用同一套内容工具；
+- 文章页包含面包屑、发布日期/更新日期、CJK + 英文阅读时间、分类/Tag 链接、桌面 sticky 目录、手机折叠目录和上一篇/下一篇；
+- Markdown 正文支持 Astro 内置 Shiki 双主题代码高亮、渐进增强的键盘可用复制按钮、响应式表格，以及通过 `remark-math`、`rehype-katex` 和 KaTeX 输出的数学公式；
+- 正文样式和 KaTeX CSS 只在文章布局加载；无 JavaScript 时文章、目录锚点、代码、表格和公式仍完整可读；
+- 当前内容层开发记录已作为首篇非草稿文章发布，用于同时验证嵌套路由、目录、代码、表格和公式。
+
+P6 博客浏览继续保持以下约束：
 
 - `/blog/` 输出完整的非草稿文章集合和明显的归档入口，JavaScript 只渐进增强 Tag、分类和每页 8 篇的客户端分页；
 - `/tags/[tag]/`、`/categories/[category]/` 与 `/archive/` 均为可直达、可分享的静态路由，关闭 JavaScript 仍可浏览；
@@ -16,28 +24,29 @@ P6 博客浏览已在既有内容基础上完成：
 此前完成的 P5 首页三阶段滚动继续保持以下约束：
 
 - light/dark 两套完整首页场景图通过 `astro:assets` 生成响应式 AVIF/WebP；
-- `HomeScrollScene` 使用单个 `requestAnimationFrame` 调度器，将滚动几何映射为可测试的三阶段进度；
-- 阶段一显示标题和终端，阶段二让它们退出并显示普通头像个人名片，阶段三让完整主视觉随 sticky 区域结束而离场并衔接文章区；
+- `HomeScrollScene` 使用单个 `requestAnimationFrame` 调度器和有阈值的滚轮意图状态机；未完成的滚轮输入会让头像轻微探出后回弹，达到阈值才一次提交阶段切换；
+- 阶段一显示标题和终端；进入阶段二时标题先快速退出，圆形头像从中下方升起并左移，随后冷色终端名片展开并逐行打字；阶段三让完整主视觉随 sticky 区域结束而离场并衔接文章区；
 - 当前主题只使用一个活动图片实例；阶段一与阶段二不会改变图片的裁切、位置、变换、亮度、饱和度、模糊或滤镜，也不会重复请求大图；
 - reduced motion、低高度横屏和受限设备使用自然流，标题、名片与内容在无 JavaScript 时仍按完整阅读顺序显示；
 - 手机端保留三阶段语义，并按 light/dark 构图分别把名片放在不会遮住主体面部的区域；
 - 首页文章区最多显示 4 篇非草稿文章，并统计已发布文章数与唯一 Tag 数；
 - 基础 `PostCard` 已由 P6 原位扩展为首页网格与博客列表共用组件。
 
-仓库目前只有一篇用于验证 Content Collection 的开发草稿，因此生产构建会正确显示首页文章空状态。不会为了填满首页而发布假文章或建立无效详情链接。
+仓库目前有一篇用于验证 Content Collection 和文章阅读链路的已发布开发记录；首页与博客会链接到它的真实嵌套详情路由。不会为了填满首页而发布假文章。
 
-尚未实施的核心阶段包括 P7 文章详情、P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
+尚未实施的核心阶段包括 P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
 
 ## 技术基线
 
 - Astro 7 + TypeScript strict
 - Astro Content Collections / Content Layer
+- Astro Markdown + Shiki、remark-math、rehype-katex、KaTeX
 - 普通 CSS、全局语义 tokens 与 Astro scoped styles
 - Vitest 单元测试
 - Playwright Chromium 生产构建 E2E
 - GitHub Pages 普通项目站，`base=/PonyLab`
 
-项目没有引入 React、Vue、Svelte、Tailwind、全局状态库、ClientRouter 或 Pagefind。后续依赖只在对应阶段按计划评估和加入。
+项目没有引入 React、Vue、Svelte、Tailwind、全局状态库、ClientRouter、Pagefind 或 Expressive Code。后续依赖只在对应阶段按计划评估和加入。
 
 ## 部署配置
 
@@ -159,11 +168,12 @@ src/
 ├─ components/global/  全局页面外壳组件
 ├─ components/home/    P4 静态首页与 P5 三阶段滚动控制
 ├─ components/blog/    共用文章卡、筛选、分页、空状态与归档组件
+├─ components/article/ 文章头部、目录、代码增强与前后篇组件
 ├─ config/             类型化站点、首页、主题与 taxonomy 配置
 ├─ content/blog/       Markdown 文章
-├─ layouts/            共享布局
-├─ pages/              首页、博客、Tag、分类与归档等 Astro 路由入口
-├─ styles/             reset、tokens 与全局样式
+├─ layouts/            全局布局与文章阅读布局
+├─ pages/              首页、博客、嵌套文章、Tag、分类与归档等路由入口
+├─ styles/             reset、tokens、全局样式与文章正文样式
 ├─ types/              跨模块数据类型
 └─ utils/              路径、内容、日期、阅读时间、首页和博客纯函数
 ```
@@ -177,3 +187,4 @@ src/
 - [P4 首页静态结构汇报](docs/stage-reports/p4-home-static-report.md)
 - [P5 首页滚动增强汇报](docs/stage-reports/p5-home-scroll-report.md)
 - [P6 博客浏览汇报](docs/stage-reports/p6-blog-browsing-report.md)
+- [P7 文章阅读汇报](docs/stage-reports/p7-article-reading-report.md)

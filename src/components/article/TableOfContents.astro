@@ -1,0 +1,111 @@
+---
+import type { ArticleHeadingNode } from '../../utils/article';
+import TocList from './TocList.astro';
+
+export interface Props {
+  headings: readonly ArticleHeadingNode[];
+  variant: 'desktop' | 'mobile';
+}
+
+const { headings, variant } = Astro.props;
+---
+
+{headings.length > 0 && (
+  variant === 'desktop' ? (
+    <aside class="article-toc article-toc--desktop" data-article-toc aria-label="文章目录">
+      <p>On this page</p>
+      <TocList nodes={headings} />
+    </aside>
+  ) : (
+    <details class="article-toc article-toc--mobile" data-article-toc>
+      <summary>文章目录</summary>
+      <nav aria-label="文章目录"><TocList nodes={headings} /></nav>
+    </details>
+  )
+)}
+
+<script>
+  const tocRoots = [...document.querySelectorAll<HTMLElement>('[data-article-toc]')];
+  const tocLinks = tocRoots.flatMap((root) => [...root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')]);
+  const headingIds = [...new Set(tocLinks.map((link) => decodeURIComponent(link.hash.slice(1))))];
+  const headings = headingIds.flatMap((id) => {
+    const heading = document.getElementById(id);
+    return heading ? [heading] : [];
+  });
+
+  const setCurrentHeading = (id: string) => {
+    for (const link of tocLinks) {
+      const current = decodeURIComponent(link.hash.slice(1)) === id;
+      if (current) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+  };
+
+  if (headings.length > 0 && 'IntersectionObserver' in window) {
+    const visible = new Map<string, number>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) visible.set(entry.target.id, entry.boundingClientRect.top);
+        else visible.delete(entry.target.id);
+      }
+
+      const firstVisible = [...visible.entries()].sort((left, right) => left[1] - right[1])[0];
+      if (firstVisible) setCurrentHeading(firstVisible[0]);
+    }, {
+      rootMargin: '-18% 0px -68% 0px',
+      threshold: [0, 1],
+    });
+
+    headings.forEach((heading) => observer.observe(heading));
+    setCurrentHeading(headings[0]!.id);
+  }
+</script>
+
+<style>
+  .article-toc {
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(0.75rem);
+  }
+
+  .article-toc--desktop {
+    position: sticky;
+    top: calc(var(--site-header-height) + var(--space-6));
+    max-height: calc(100vh - var(--site-header-height) - var(--space-12));
+    align-self: start;
+    padding: var(--space-4);
+    overflow: auto;
+  }
+
+  .article-toc--desktop > p {
+    margin-bottom: var(--space-3);
+    color: var(--color-accent-warm);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .article-toc--mobile {
+    margin-bottom: var(--space-6);
+  }
+
+  .article-toc--mobile summary {
+    padding: var(--space-4);
+    color: var(--color-text);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .article-toc--mobile nav {
+    padding: 0 var(--space-4) var(--space-4);
+  }
+
+  @media print {
+    .article-toc { display: none; }
+  }
+</style>

@@ -28,6 +28,7 @@ async function injectFixturePosts(page: Page): Promise<void> {
 
       if (!list || list.dataset.fixturePosts === 'true') return;
       list.dataset.fixturePosts = 'true';
+      list.replaceChildren();
 
       for (const post of posts) {
         const card = document.createElement('article');
@@ -145,7 +146,10 @@ test.describe('blog without JavaScript', () => {
   }) => {
     await page.route('**/PonyLab/blog/**', async (route) => {
       const response = await route.fetch();
-      const html = await response.text();
+      const html = (await response.text()).replaceAll(
+        'data-blog-post',
+        'data-blog-post hidden',
+      );
       const listMarker = '<div class="post-list" data-post-list';
       const markerIndex = html.indexOf(listMarker);
       const openingEnd = markerIndex >= 0 ? html.indexOf('>', markerIndex) : -1;

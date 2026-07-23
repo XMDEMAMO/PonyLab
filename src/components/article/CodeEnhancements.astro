@@ -1,0 +1,80 @@
+<script>
+  const article = document.querySelector<HTMLElement>('[data-article-content]');
+
+  const copyText = async (text: string) => {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error('Clipboard API is unavailable.');
+    }
+
+    await navigator.clipboard.writeText(text);
+  };
+
+  article?.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
+    if (pre.dataset.copyEnhanced === 'true' || !pre.querySelector('code')) return;
+
+    const shell = document.createElement('div');
+    const button = document.createElement('button');
+    shell.className = 'code-block-shell';
+    button.className = 'code-copy-button';
+    button.type = 'button';
+    button.textContent = '复制';
+    button.setAttribute('aria-label', '复制代码');
+    pre.dataset.copyEnhanced = 'true';
+    pre.before(shell);
+    shell.append(pre, button);
+
+    button.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.textContent ?? '';
+
+      try {
+        await copyText(code);
+        button.textContent = '已复制';
+        button.setAttribute('aria-label', '代码已复制');
+      } catch {
+        button.textContent = '复制失败';
+        button.setAttribute('aria-label', '代码复制失败');
+      }
+
+      window.setTimeout(() => {
+        button.textContent = '复制';
+        button.setAttribute('aria-label', '复制代码');
+      }, 1_800);
+    });
+  });
+</script>
+
+<style is:global>
+  .code-block-shell {
+    position: relative;
+    margin-block: 1.75rem;
+  }
+
+  .code-block-shell > pre {
+    margin-block: 0;
+    padding-top: 3rem;
+  }
+
+  .code-copy-button {
+    position: absolute;
+    z-index: 2;
+    top: 0.62rem;
+    right: 0.62rem;
+    min-height: 2rem;
+    padding-inline: 0.72rem;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-bg-elevated) 88%, transparent);
+    font-size: 0.72rem;
+    cursor: pointer;
+  }
+
+  .code-copy-button:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  @media print {
+    .code-copy-button { display: none; }
+  }
+</style>

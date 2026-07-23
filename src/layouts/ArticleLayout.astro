@@ -1,0 +1,101 @@
+---
+import 'katex/dist/katex.min.css';
+
+import ArticleHeader from '../components/article/ArticleHeader.astro';
+import CodeEnhancements from '../components/article/CodeEnhancements.astro';
+import PostNavigation from '../components/article/PostNavigation.astro';
+import TableOfContents from '../components/article/TableOfContents.astro';
+import type { AdjacentPosts, PostRecord } from '../types/content';
+import type { ArticleHeadingNode } from '../utils/article';
+import type { ReadingTimeResult } from '../utils/reading-time';
+import BaseLayout from './BaseLayout.astro';
+
+export interface Props {
+  post: PostRecord;
+  headings: readonly ArticleHeadingNode[];
+  readingTime: ReadingTimeResult;
+  adjacent: AdjacentPosts<PostRecord>;
+}
+
+const { post, headings, readingTime, adjacent } = Astro.props;
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  backgroundMode="content"
+  pageClass="article-page"
+>
+  <div class="article-shell page-shell">
+    <ArticleHeader post={post} readingTime={readingTime} />
+
+    <div class="article-shell__reading">
+      <div class="article-shell__main">
+        <div class="article-shell__toc-mobile">
+          <TableOfContents headings={headings} variant="mobile" />
+        </div>
+        <slot />
+      </div>
+      <div class="article-shell__toc-desktop">
+        <TableOfContents headings={headings} variant="desktop" />
+      </div>
+    </div>
+
+    <PostNavigation adjacent={adjacent} />
+  </div>
+  <CodeEnhancements />
+</BaseLayout>
+
+<style>
+  .article-shell {
+    padding-bottom: clamp(4rem, 10vw, 8rem);
+  }
+
+  .article-shell__reading {
+    display: grid;
+    max-width: 70rem;
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    margin-inline: auto;
+    align-items: start;
+  }
+
+  .article-shell__main {
+    min-width: 0;
+  }
+
+  .article-shell__toc-mobile {
+    display: none;
+  }
+
+  .article-shell__toc-desktop {
+    min-width: 0;
+  }
+
+  @media (max-width: 63.99rem) {
+    .article-shell__reading { grid-template-columns: minmax(0, 1fr); }
+    .article-shell__toc-desktop { display: none; }
+    .article-shell__toc-mobile { display: block; }
+  }
+
+  @media print {
+    .article-shell { width: 100%; padding: 0; }
+    .article-shell__reading { display: block; max-width: none; }
+  }
+</style>
+
+<style is:global>
+  @media print {
+    body.article-page > .site-header,
+    body.article-page > .site-footer,
+    body.article-page > .global-background,
+    body.article-page > .skip-link {
+      display: none;
+    }
+
+    body.article-page {
+      color: #111;
+      background: #fff;
+    }
+  }
+</style>

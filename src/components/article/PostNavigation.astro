@@ -1,0 +1,100 @@
+---
+import type { AdjacentPosts, PostRecord } from '../../types/content';
+import { sitePaths } from '../../utils/paths';
+import { toArticlePath } from '../../utils/posts';
+
+export interface Props {
+  adjacent: AdjacentPosts<PostRecord>;
+}
+
+const { adjacent } = Astro.props;
+---
+
+<footer class="post-navigation">
+  <a class="post-navigation__return" href={sitePaths.page('/blog/')}>
+    <span aria-hidden="true">←</span> 返回博客
+  </a>
+
+  {(adjacent.previous || adjacent.next) && (
+    <nav class="post-navigation__adjacent" aria-label="相邻文章">
+      {adjacent.previous ? (
+        <a href={toArticlePath(adjacent.previous.id)} rel="prev">
+          <span>上一篇</span>
+          <strong>{adjacent.previous.data.title}</strong>
+        </a>
+      ) : <span></span>}
+      {adjacent.next && (
+        <a href={toArticlePath(adjacent.next.id)} rel="next">
+          <span>下一篇</span>
+          <strong>{adjacent.next.data.title}</strong>
+        </a>
+      )}
+    </nav>
+  )}
+</footer>
+
+<style>
+  .post-navigation {
+    max-width: 70rem;
+    margin: clamp(3rem, 7vw, 6rem) auto 0;
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .post-navigation__return {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+    color: var(--color-text);
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+  }
+
+  .post-navigation__adjacent {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+
+  .post-navigation__adjacent a {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    color: var(--color-text);
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .post-navigation__adjacent a:last-child {
+    text-align: right;
+  }
+
+  .post-navigation__adjacent span {
+    color: var(--color-accent-warm);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  .post-navigation__adjacent strong {
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 39.99rem) {
+    .post-navigation__adjacent { grid-template-columns: 1fr; }
+    .post-navigation__adjacent > span { display: none; }
+    .post-navigation__adjacent a:last-child { text-align: left; }
+  }
+
+  @media print {
+    .post-navigation { display: none; }
+  }
+</style>

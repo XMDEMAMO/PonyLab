@@ -1,0 +1,48 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+
+import MarkdownContent from '../../components/article/MarkdownContent.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import type { AdjacentPosts } from '../../types/content';
+import { buildHeadingTree } from '../../utils/article';
+import {
+  filterPublishedPosts,
+  getAdjacentPosts,
+  sortPosts,
+  toArticleSlug,
+} from '../../utils/posts';
+import { calculateReadingTime } from '../../utils/reading-time';
+
+type BlogEntry = CollectionEntry<'blog'>;
+
+interface Props {
+  post: BlogEntry;
+  adjacent: AdjacentPosts<BlogEntry>;
+}
+
+export async function getStaticPaths() {
+  const posts = sortPosts(filterPublishedPosts(await getCollection('blog')));
+
+  return posts.map((post) => ({
+    params: { slug: toArticleSlug(post.id) },
+    props: {
+      post,
+      adjacent: getAdjacentPosts(posts, post.id),
+    },
+  }));
+}
+
+const { post, adjacent } = Astro.props;
+const { Content, headings } = await render(post);
+const headingTree = buildHeadingTree(headings);
+const readingTime = calculateReadingTime(post.body ?? '');
+---
+
+<ArticleLayout
+  post={post}
+  headings={headingTree}
+  readingTime={readingTime}
+  adjacent={adjacent}
+>
+  <MarkdownContent><Content /></MarkdownContent>
+</ArticleLayout>

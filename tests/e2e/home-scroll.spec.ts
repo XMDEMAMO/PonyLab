@@ -35,6 +35,7 @@ async function scrollSceneTo(page: Page, progress: number): Promise<void> {
   await page.evaluate(
     () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
   );
+  await page.waitForTimeout(220);
 }
 
 async function readImageSnapshot(page: Page): Promise<ImageSnapshot> {
@@ -70,19 +71,24 @@ async function readForeground(page: Page) {
   return page.locator('[data-home-scroll-scene]').evaluate((root) => {
     const title = root.querySelector<HTMLElement>('[data-home-title-layer]');
     const profile = root.querySelector<HTMLElement>('[data-home-profile-layer]');
+    const profileAvatar = root.querySelector<HTMLElement>('[data-profile-avatar]');
+    const profileTerminal = root.querySelector<HTMLElement>('[data-profile-terminal]');
     const visual = root.querySelector<HTMLElement>('[data-home-scroll-visual]');
-    if (!title || !profile || !visual) throw new Error('Missing home foreground layer');
+    if (!title || !profile || !profileAvatar || !profileTerminal || !visual) {
+      throw new Error('Missing home foreground layer');
+    }
 
     const titleStyle = getComputedStyle(title);
-    const profileStyle = getComputedStyle(profile);
+    const avatarStyle = getComputedStyle(profileAvatar);
+    const terminalStyle = getComputedStyle(profileTerminal);
     const visualStyle = getComputedStyle(visual);
 
     return {
       stage: root.getAttribute('data-home-scroll-stage'),
       title: { opacity: Number(titleStyle.opacity), transform: titleStyle.transform },
       profile: {
-        opacity: Number(profileStyle.opacity),
-        transform: profileStyle.transform,
+        opacity: Math.max(Number(avatarStyle.opacity), Number(terminalStyle.opacity)),
+        transform: `${avatarStyle.transform} | ${terminalStyle.transform}`,
         inert: profile.hasAttribute('inert'),
         ariaHidden: profile.getAttribute('aria-hidden'),
       },
@@ -90,6 +96,36 @@ async function readForeground(page: Page) {
     };
   });
 }
+
+test('wheel intent rebounds below the threshold and docks as one linked sequence', async ({
+  page,
+}) => {
+  await page.goto('./');
+
+  const root = page.locator('[data-home-scroll-scene]');
+  const initialScrollY = await page.evaluate(() => window.scrollY);
+
+  await page.mouse.wheel(0, 64);
+  await expect(root).toHaveAttribute('data-home-motion-state', 'pulling');
+  await expect(root).toHaveAttribute('data-home-scroll-stage', '1');
+  await page.waitForTimeout(760);
+  await expect(root).toHaveAttribute('data-home-motion-state', 'intro');
+  expect(await page.evaluate(() => window.scrollY)).toBe(initialScrollY);
+
+  await page.mouse.wheel(0, 100);
+  await page.mouse.wheel(0, 100);
+  await page.mouse.wheel(0, 100);
+
+  await expect(root).toHaveAttribute('data-home-motion-state', 'docking');
+  await expect(root).toHaveAttribute('data-home-scroll-stage', '2');
+  await expect(page.locator('[data-home-title-layer]')).toHaveCSS('opacity', '0');
+  await expect(root).toHaveAttribute('data-home-motion-state', 'profile', {
+    timeout: 3_200,
+  });
+  await expect(page.locator('[data-profile-avatar]')).toBeVisible();
+  await expect(page.locator('[data-profile-terminal]')).toBeVisible();
+  await expect(page.locator('[data-terminal-typing]')).toContainText('profile@ponylab:~$');
+});
 
 for (const theme of ['light', 'dark'] as const) {
   test(`${theme} keeps the same static scene through stages one and two`, async ({

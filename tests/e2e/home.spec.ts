@@ -78,8 +78,12 @@ test('renders the P4 content in title, profile, and content order', async ({ pag
         nodes.map((node) => node.getAttribute('data-home-reading-step')),
       ),
   ).toEqual(['title', 'profile', 'content']);
-  await expect(page.getByText('当前还没有已发布文章。')).toBeVisible();
-  await expect(page.getByText('0', { exact: true })).toHaveCount(2);
+  await expect(
+    page.getByRole('link', { name: /PonyLab 内容层搭建记录/ }).first(),
+  ).toBeVisible();
+  const stats = page.locator('.site-stats');
+  await expect(stats.getByText('1', { exact: true })).toBeVisible();
+  await expect(stats.getByText('2', { exact: true })).toBeVisible();
 });
 
 for (const theme of ['light', 'dark'] as const) {
@@ -161,6 +165,7 @@ for (const viewport of responsiveCases) {
       const image = page.locator('[data-home-hero-image]');
       const title = page.locator('[data-home-reading-step="title"]');
       const profile = page.locator('[data-home-reading-step="profile"]');
+      const scrollScene = page.locator('[data-home-scroll-scene]');
       await expect(page.locator('[data-home-hero-scene]')).toHaveAttribute(
         'data-active-theme',
         theme,
@@ -188,7 +193,12 @@ for (const viewport of responsiveCases) {
           : theme === 'light' ? '0% 50%' : '50% 48%',
       );
 
-      if (titleBox && profileBox && viewport.width >= 768) {
+      const scrollMode = await scrollScene.getAttribute('data-home-scroll-mode');
+      if (scrollMode === 'enhanced') {
+        await expect(page.locator('[data-profile-avatar]')).toHaveCSS('opacity', '0');
+        await expect(page.locator('[data-profile-terminal]')).toHaveCSS('opacity', '0');
+      }
+      if (titleBox && profileBox && viewport.width >= 768 && scrollMode === 'natural') {
         const overlaps = !(
           titleBox.x + titleBox.width <= profileBox.x ||
           profileBox.x + profileBox.width <= titleBox.x ||
@@ -208,12 +218,11 @@ for (const viewport of responsiveCases) {
 
         await scrollHomeSceneTo(page, 0.48);
         await expect(profileLayer).toHaveAttribute('aria-hidden', 'false');
-        expect(
-          await titleLayer.evaluate((element) => Number(getComputedStyle(element).opacity)),
-        ).toBeLessThan(0.05);
-        expect(
-          await profileLayer.evaluate((element) => Number(getComputedStyle(element).opacity)),
-        ).toBeGreaterThan(0.9);
+        await expect
+          .poll(() => titleLayer.evaluate((element) => Number(getComputedStyle(element).opacity)))
+          .toBeLessThan(0.05);
+        await expect(page.locator('[data-profile-avatar]')).toHaveCSS('opacity', '1');
+        await expect(page.locator('[data-profile-terminal]')).toHaveCSS('opacity', '1');
       }
       await expect(image).toHaveAttribute('alt', /插画/);
     });

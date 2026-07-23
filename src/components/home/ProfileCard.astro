@@ -21,130 +21,521 @@ const {
 ---
 
 <article class="profile-card" data-home-reading-step="profile">
-  <div class="profile-card__header">
+  <div class="profile-card__avatar-shell" data-profile-avatar>
+    <span class="profile-card__halo" aria-hidden="true"></span>
     <Image
       class="profile-card__avatar"
       src={author.avatar}
       alt={author.avatarAlt}
-      width={112}
-      height={112}
+      width={176}
+      height={176}
       format="webp"
-      quality={78}
+      quality={80}
       loading="eager"
     />
-    <div>
-      <p class="profile-card__label">Profile / 02</p>
-      <h2>{author.name}</h2>
+  </div>
+
+  <span class="profile-card__connector" aria-hidden="true"></span>
+
+  <div class="profile-card__terminal" data-profile-terminal>
+    <div class="profile-card__terminal-bar" aria-hidden="true">
+      <span class="profile-card__terminal-lights"><i></i><i></i><i></i></span>
+      <span>ponylab-profile.exe</span>
+    </div>
+
+    <div class="profile-card__terminal-content" data-terminal-typing>
+      <p class="profile-card__path profile-card__typed-line">C:\Users\PonyLab\profile</p>
+      <h2 class="profile-card__command profile-card__typed-line">
+        <span>profile@ponylab:~$</span> {author.name}<i aria-hidden="true"></i>
+      </h2>
+      <p class="profile-card__bio profile-card__late-line">{author.bio}</p>
+
+      <div class="profile-card__footer profile-card__late-line">
+        <p class="profile-card__status">
+          <span class="profile-card__status-dot" aria-hidden="true"></span>
+          <span><strong>{statusLabel}</strong> · {statusText}</span>
+        </p>
+
+        <a class="profile-card__action" href={actionHref}>
+          {actionLabel}<span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </div>
   </div>
-
-  <p class="profile-card__bio">{author.bio}</p>
-
-  <div class="profile-card__status">
-    <span class="profile-card__status-dot" aria-hidden="true"></span>
-    <span><strong>{statusLabel}</strong> · {statusText}</span>
-  </div>
-
-  <a class="profile-card__action" href={actionHref}>{actionLabel}<span aria-hidden="true">↗</span></a>
 </article>
 
 <style>
   .profile-card {
-    width: min(100%, 27rem);
-    align-self: end;
-    justify-self: end;
-    padding: clamp(1.25rem, 2.8vw, 2rem);
-    color: var(--color-text);
-    border: 1px solid color-mix(in srgb, var(--color-border) 78%, white 12%);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
-    box-shadow: var(--shadow-floating);
-    backdrop-filter: blur(1rem) saturate(108%);
+    --profile-dock-travel: clamp(8rem, 22vw, 18rem);
+    display: grid;
+    width: min(46rem, 92vw);
+    max-width: 100%;
+    grid-template-columns: auto clamp(0.7rem, 1.8vw, 1.25rem) minmax(0, 1fr);
+    align-items: center;
+    color: #e9f2f4;
   }
 
-  .profile-card__header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
+  .profile-card__avatar-shell {
+    position: relative;
+    z-index: 3;
+    width: clamp(6.8rem, 11vw, 9rem);
+    aspect-ratio: 1;
+    opacity: 1;
+    filter: drop-shadow(0 1rem 1.5rem rgb(2 12 18 / 34%));
   }
 
   .profile-card__avatar {
-    width: 4.5rem;
-    height: 4.5rem;
-    flex: 0 0 auto;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border: 1px solid color-mix(in srgb, var(--color-accent) 60%, white 16%);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    border: 0.32rem solid color-mix(in srgb, white 82%, var(--color-accent) 18%);
+    border-radius: 50%;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 28%),
+      0 0 0 1px color-mix(in srgb, var(--color-accent) 56%, transparent),
+      0 0 2rem color-mix(in srgb, var(--color-accent) 18%, transparent);
   }
 
-  .profile-card__label {
-    color: var(--color-accent-warm);
+  .profile-card__halo {
+    position: absolute;
+    z-index: 4;
+    top: -12%;
+    left: 50%;
+    width: 56%;
+    height: 15%;
+    border: 2px solid var(--color-accent-warm);
+    border-radius: 50%;
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--color-accent-warm) 34%, transparent);
+    transform: translateX(-50%) rotate(-6deg);
+  }
+
+  .profile-card__connector {
+    z-index: 2;
+    width: 100%;
+    height: 2px;
+    opacity: 1;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-warm),
+      color-mix(in srgb, var(--color-accent) 74%, transparent)
+    );
+    box-shadow: 0 0 0.8rem color-mix(in srgb, var(--color-accent-warm) 26%, transparent);
+  }
+
+  .profile-card__terminal {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: #e9f2f4;
+    border: 1px solid rgb(177 210 219 / 34%);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(120deg, rgb(15 31 40 / 91%), rgb(20 43 53 / 84%)),
+      var(--color-surface-strong);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 5%),
+      var(--shadow-floating);
+    backdrop-filter: blur(1rem) saturate(112%);
+    transform-origin: left center;
+  }
+
+  .profile-card__terminal::after {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 3px,
+      rgb(255 255 255 / 2%) 4px
+    );
+    content: '';
+    pointer-events: none;
+  }
+
+  .profile-card__terminal-bar {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-inline: var(--space-4);
+    color: rgb(222 237 240 / 64%);
+    border-bottom: 1px solid rgb(177 210 219 / 18%);
+    background: rgb(255 255 255 / 4%);
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
 
-  h2 {
-    margin-top: 0.25rem;
-    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
-    line-height: 1.2;
+  .profile-card__terminal-lights {
+    display: flex;
+    gap: 0.38rem;
+  }
+
+  .profile-card__terminal-lights i {
+    width: 0.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgb(218 233 237 / 38%);
+  }
+
+  .profile-card__terminal-lights i:first-child {
+    background: var(--color-accent-warm);
+  }
+
+  .profile-card__terminal-content {
+    min-height: 16rem;
+    padding: clamp(1.2rem, 2.8vw, 1.9rem);
+    font-family: var(--font-mono);
+  }
+
+  .profile-card__path {
+    color: #a8c8cf;
+    font-size: 0.76rem;
+  }
+
+  .profile-card__command {
+    margin-top: var(--space-4);
+    overflow: hidden;
+    color: #f3f7f8;
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+
+  .profile-card__command span {
+    color: var(--color-accent-warm);
+  }
+
+  .profile-card__command i {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    margin-left: 0.16em;
+    vertical-align: -0.14em;
+    background: var(--color-accent-warm);
+    animation: terminal-caret 850ms steps(1, end) infinite;
   }
 
   .profile-card__bio {
-    margin-top: var(--space-6);
-    color: var(--color-text-muted);
-    line-height: 1.75;
+    margin-top: var(--space-3);
+    color: rgb(222 237 240 / 72%);
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+
+  .profile-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
   }
 
   .profile-card__status {
     display: flex;
+    min-width: 0;
     align-items: flex-start;
-    gap: var(--space-3);
-    margin-top: var(--space-6);
-    padding: var(--space-3) var(--space-4);
-    color: var(--color-text-muted);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--color-bg-elevated) 66%, transparent);
-    font-size: 0.86rem;
+    gap: var(--space-2);
+    color: rgb(222 237 240 / 66%);
+    font-family: var(--font-sans);
+    font-size: 0.76rem;
   }
 
   .profile-card__status strong {
-    color: var(--color-text);
+    color: #edf5f6;
   }
 
   .profile-card__status-dot {
-    width: 0.55rem;
+    width: 0.48rem;
     aspect-ratio: 1;
     flex: 0 0 auto;
-    margin-top: 0.42rem;
+    margin-top: 0.34rem;
     border-radius: 50%;
     background: var(--color-accent-warm);
-    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-accent-warm) 18%, transparent);
+    box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-accent-warm) 18%, transparent);
   }
 
   .profile-card__action {
     display: inline-flex;
-    min-height: 2.75rem;
+    min-height: 2.5rem;
+    flex: 0 0 auto;
     align-items: center;
     gap: var(--space-2);
-    margin-top: var(--space-6);
     padding-inline: var(--space-4);
-    color: var(--color-text);
-    font-weight: 700;
+    color: #edf5f6;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 750;
     text-decoration: none;
-    border: 1px solid var(--color-border);
+    border: 1px solid rgb(177 210 219 / 28%);
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    background: rgb(142 185 197 / 12%);
+  }
+
+  :global([data-home-scroll-mode='enhanced']) .profile-card {
+    pointer-events: none;
+  }
+
+  :global([data-home-scroll-mode='enhanced']) .profile-card__avatar-shell {
+    opacity: 0;
+    transform: translate3d(var(--profile-dock-travel), 42vh, 0) scale(0.74);
+  }
+
+  :global([data-home-scroll-mode='enhanced']) .profile-card__connector {
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  :global([data-home-scroll-mode='enhanced']) .profile-card__terminal {
+    clip-path: inset(0 100% 0 0 round var(--radius-lg));
+    opacity: 0;
+    transform: scaleX(0.72);
+  }
+
+  :global([data-home-scroll-mode='enhanced']) .profile-card__typed-line,
+  :global([data-home-scroll-mode='enhanced']) .profile-card__late-line {
+    opacity: 0;
+  }
+
+  :global([data-home-motion-state='pulling']) .profile-card__avatar-shell {
+    opacity: 0.62;
+    transform: translate3d(var(--profile-dock-travel), 31vh, 0) scale(0.8);
+    transition:
+      opacity 140ms ease-out,
+      transform 180ms ease-out;
+  }
+
+  :global([data-home-motion-state='rebounding']) .profile-card__avatar-shell {
+    animation: profile-avatar-rebound 420ms cubic-bezier(0.2, 0.85, 0.26, 1) both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__avatar-shell {
+    animation: profile-avatar-dock 840ms cubic-bezier(0.16, 1.18, 0.28, 1) 150ms both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__connector {
+    animation: profile-connector-open 280ms ease-out 760ms both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__terminal {
+    animation: profile-terminal-open 560ms cubic-bezier(0.16, 1, 0.3, 1) 720ms both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__typed-line:first-child {
+    animation: terminal-type-line 420ms steps(24, end) 1.08s both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__typed-line:nth-child(2) {
+    animation: terminal-type-line 620ms steps(32, end) 1.48s both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__late-line {
+    animation: terminal-late-line 260ms ease-out 2.06s both;
+  }
+
+  :global([data-home-motion-state='docking']) .profile-card__late-line:nth-child(4) {
+    animation-delay: 2.2s;
+  }
+
+  :global([data-home-motion-state='profile']) .profile-card {
+    pointer-events: auto;
+  }
+
+  :global([data-home-motion-state='profile']) .profile-card__avatar-shell,
+  :global([data-home-motion-state='profile']) .profile-card__connector,
+  :global([data-home-motion-state='profile']) .profile-card__terminal,
+  :global([data-home-motion-state='profile']) .profile-card__typed-line,
+  :global([data-home-motion-state='profile']) .profile-card__late-line {
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  :global([data-home-motion-state='retreating']) .profile-card__terminal {
+    animation: profile-terminal-close 320ms ease-in both;
+  }
+
+  :global([data-home-motion-state='retreating']) .profile-card__connector {
+    animation: profile-connector-close 220ms ease-in 140ms both;
+  }
+
+  :global([data-home-motion-state='retreating']) .profile-card__avatar-shell {
+    animation: profile-avatar-retreat 620ms cubic-bezier(0.4, 0, 0.8, 0.2) 180ms both;
+  }
+
+  :global([data-home-motion-state='retreating']) .profile-card__typed-line,
+  :global([data-home-motion-state='retreating']) .profile-card__late-line {
+    opacity: 1;
+  }
+
+  @keyframes profile-avatar-dock {
+    0% {
+      opacity: 0;
+      transform: translate3d(var(--profile-dock-travel), 42vh, 0) scale(0.74);
+    }
+    55% {
+      opacity: 1;
+      transform: translate3d(var(--profile-dock-travel), 0, 0) scale(1.045);
+    }
+    70% {
+      opacity: 1;
+      transform: translate3d(var(--profile-dock-travel), 0, 0) scale(1);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  @keyframes profile-avatar-rebound {
+    0% {
+      opacity: 0.62;
+      transform: translate3d(var(--profile-dock-travel), 31vh, 0) scale(0.8);
+    }
+    38% {
+      opacity: 0.38;
+      transform: translate3d(var(--profile-dock-travel), 36vh, 0) scale(0.77);
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(var(--profile-dock-travel), 42vh, 0) scale(0.74);
+    }
+  }
+
+  @keyframes profile-avatar-retreat {
+    0% {
+      opacity: 1;
+      transform: none;
+    }
+    42% {
+      opacity: 1;
+      transform: translate3d(var(--profile-dock-travel), 0, 0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(var(--profile-dock-travel), 42vh, 0) scale(0.74);
+    }
+  }
+
+  @keyframes profile-terminal-open {
+    0% {
+      clip-path: inset(0 100% 0 0 round var(--radius-lg));
+      opacity: 0;
+      transform: scaleX(0.72);
+    }
+    18% { opacity: 1; }
+    100% {
+      clip-path: inset(0 0 0 0 round var(--radius-lg));
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes profile-terminal-close {
+    from {
+      clip-path: inset(0 0 0 0 round var(--radius-lg));
+      opacity: 1;
+      transform: scaleX(1);
+    }
+    to {
+      clip-path: inset(0 100% 0 0 round var(--radius-lg));
+      opacity: 0;
+      transform: scaleX(0.72);
+    }
+  }
+
+  @keyframes profile-connector-open {
+    from { opacity: 0; transform: scaleX(0); }
+    to { opacity: 1; transform: scaleX(1); }
+  }
+
+  @keyframes profile-connector-close {
+    from { opacity: 1; transform: scaleX(1); }
+    to { opacity: 0; transform: scaleX(0); }
+  }
+
+  @keyframes terminal-type-line {
+    0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+    100% { clip-path: inset(0 0 0 0); opacity: 1; }
+  }
+
+  @keyframes terminal-late-line {
+    from { opacity: 0; transform: translateY(0.45rem); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes terminal-caret {
+    0%, 48% { opacity: 1; }
+    49%, 100% { opacity: 0; }
   }
 
   @media (max-width: 47.99rem) {
     .profile-card {
-      width: min(100%, 24rem);
-      justify-self: end;
-      backdrop-filter: blur(0.75rem) saturate(108%);
+      --profile-dock-travel: 0;
+      width: min(22rem, 88vw);
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+
+    .profile-card__avatar-shell {
+      width: 6.5rem;
+      margin-bottom: -1.2rem;
+    }
+
+    .profile-card__connector {
+      display: none;
+    }
+
+    .profile-card__terminal {
+      width: 100%;
+      transform-origin: center top;
+    }
+
+    .profile-card__terminal-content {
+      min-height: 15rem;
+      padding: 1.15rem;
+      padding-top: 2rem;
+    }
+
+    .profile-card__command {
+      font-size: 0.9rem;
+    }
+
+    .profile-card__footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    :global([data-home-scroll-mode='enhanced']) .profile-card__avatar-shell {
+      transform: translate3d(0, 34vh, 0) scale(0.74);
+    }
+
+    :global([data-home-motion-state='pulling']) .profile-card__avatar-shell {
+      transform: translate3d(0, 25vh, 0) scale(0.8);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .profile-card__command i {
+      animation: none;
+    }
+
+    .profile-card__avatar-shell,
+    .profile-card__connector,
+    .profile-card__terminal,
+    .profile-card__typed-line,
+    .profile-card__late-line {
+      animation: none !important;
+      clip-path: none !important;
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
 
@@ -157,8 +548,8 @@ const {
     }
 
     .profile-card__action:hover {
-      border-color: color-mix(in srgb, var(--color-accent) 68%, var(--color-border));
-      background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+      border-color: color-mix(in srgb, var(--color-accent) 68%, rgb(177 210 219 / 28%));
+      background: rgb(142 185 197 / 22%);
       transform: translateY(-1px);
     }
   }

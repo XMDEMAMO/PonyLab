@@ -101,9 +101,32 @@ const postStats = getHomePostStats(allPosts);
   }
 
   :global([data-home-scroll-mode='enhanced']) .home-hero__title {
-    opacity: calc(1 - var(--home-title-exit));
-    transform: translate3d(0, calc(var(--home-title-exit) * -1.75rem), 0);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 165ms cubic-bezier(0.4, 0, 1, 1),
+      transform 165ms cubic-bezier(0.4, 0, 1, 1),
+      filter 165ms cubic-bezier(0.4, 0, 1, 1);
     will-change: opacity, transform;
+  }
+
+  :global([data-home-motion-state='pulling']) .home-hero__title {
+    opacity: 0.84;
+    transform: translate3d(0, -0.25rem, 0);
+  }
+
+  :global([data-home-motion-state='rebounding']) .home-hero__title,
+  :global([data-home-motion-state='intro']) .home-hero__title {
+    opacity: 1;
+    transform: none;
+  }
+
+  :global([data-home-motion-state='docking']) .home-hero__title,
+  :global([data-home-motion-state='profile']) .home-hero__title,
+  :global([data-home-motion-state='content']) .home-hero__title {
+    opacity: 0;
+    filter: blur(0.1rem);
+    transform: translate3d(0, -1.4rem, 0) scale(0.99);
   }
 
   .home-hero__profile {
@@ -112,13 +135,22 @@ const postStats = getHomePostStats(allPosts);
   }
 
   :global([data-home-scroll-mode='enhanced']) .home-hero__profile {
-    opacity: var(--home-profile-enter);
-    transform: translate3d(
-      calc((1 - var(--home-profile-enter)) * 2rem),
-      calc((1 - var(--home-profile-enter)) * 3.5rem),
-      0
-    );
-    will-change: opacity, transform;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-self: stretch;
+    place-items: center;
+    padding-top: 0;
+    pointer-events: none;
+  }
+
+  :global([data-home-motion-state='profile']) .home-hero__profile {
+    pointer-events: auto;
+  }
+
+  :global([data-home-motion-state='content']) .home-hero__profile {
+    opacity: calc(1 - var(--home-hero-exit));
+    transform: translate3d(0, calc(var(--home-hero-exit) * -1rem), 0);
   }
 
   .home-content {
@@ -170,20 +202,15 @@ const postStats = getHomePostStats(allPosts);
     }
 
     :global([data-home-scroll-mode='enhanced']) .home-hero__profile {
-      align-self: start;
-      padding-top: var(--space-6);
-      transform: translate3d(
-        0,
-        calc((1 - var(--home-profile-enter)) * 2.5rem),
-        0
-      );
+      align-self: stretch;
+      padding-top: 0;
     }
 
     :global(html[data-theme='dark'])
       :global([data-home-scroll-mode='enhanced'])
       .home-hero__profile {
-      align-self: end;
-      padding-block: 0 var(--space-6);
+      align-self: stretch;
+      padding-block: 0;
     }
   }
 

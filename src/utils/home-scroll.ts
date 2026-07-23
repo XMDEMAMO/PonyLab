@@ -22,6 +22,42 @@ export interface HomeScrollCapabilities {
   deviceMemory?: number;
 }
 
+export type HomeScrollIntentDirection = 'forward' | 'backward';
+
+export interface HomeScrollIntentState {
+  amount: number;
+  direction: HomeScrollIntentDirection | null;
+}
+
+export interface HomeScrollIntentResult extends HomeScrollIntentState {
+  committed: HomeScrollIntentDirection | null;
+}
+
+export function advanceHomeScrollIntent(
+  state: HomeScrollIntentState,
+  deltaY: number,
+  threshold = 260,
+): HomeScrollIntentResult {
+  const normalizedThreshold = Math.max(1, Math.abs(threshold));
+
+  if (!Number.isFinite(deltaY) || deltaY === 0) {
+    return { ...state, committed: null };
+  }
+
+  const direction: HomeScrollIntentDirection = deltaY > 0 ? 'forward' : 'backward';
+  const previousAmount = state.direction === direction ? state.amount : 0;
+  const amount = Math.min(
+    normalizedThreshold,
+    Math.max(0, previousAmount) + Math.abs(deltaY),
+  );
+
+  return {
+    amount,
+    direction,
+    committed: amount >= normalizedThreshold ? direction : null,
+  };
+}
+
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
 }

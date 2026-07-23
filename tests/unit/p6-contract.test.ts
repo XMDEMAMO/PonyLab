@@ -40,7 +40,7 @@ describe('P6 blog browsing boundary', () => {
     ).resolves.toEqual(expectedFiles.map(() => true));
   });
 
-  it('keeps Pagefind and later-phase features out of P6', async () => {
+  it('keeps Pagefind and optional later-phase features out until their phases', async () => {
     const packageJson = JSON.parse(await readProjectFile('package.json')) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
@@ -53,13 +53,18 @@ describe('P6 blog browsing boundary', () => {
     expect(await projectFileExists('src/components/blog/SearchField.astro')).toBe(
       false,
     );
-    expect(await projectFileExists('src/pages/blog/[...slug].astro')).toBe(false);
+    expect(await projectFileExists('src/components/global/GlobalMusicPlayer.astro')).toBe(
+      false,
+    );
+    expect(await projectFileExists('src/components/global/ScrollProgressControl.astro')).toBe(
+      false,
+    );
   });
 
   it('keeps the project handoff documentation synchronized', async () => {
     const readme = await readProjectFile('README.md');
 
-    expect(readme).toContain('当前已完成 P1—P6');
+    expect(readme).toMatch(/当前已完成 P1—P(?:6|[7-9]|1[0-3])/u);
     expect(readme).toContain('P6 博客浏览');
     expect(readme).toContain('p6-blog-browsing-report.md');
   });

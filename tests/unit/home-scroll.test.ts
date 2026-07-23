@@ -74,3 +74,53 @@ describe('home scroll device fallback', () => {
     ).toBe(false);
   });
 });
+
+describe('home scroll intent threshold', () => {
+  it('commits a direction only after the accumulated wheel intent crosses the threshold', async () => {
+    const module = await import('../../src/utils/home-scroll') as Record<string, unknown>;
+    const advance = module.advanceHomeScrollIntent;
+
+    expect(advance).toBeTypeOf('function');
+    if (typeof advance !== 'function') return;
+
+    const advanceIntent = advance as (
+      state: { amount: number; direction: 'forward' | 'backward' | null },
+      deltaY: number,
+      threshold?: number,
+    ) => {
+      amount: number;
+      direction: 'forward' | 'backward' | null;
+      committed: 'forward' | 'backward' | null;
+    };
+
+    const first = advanceIntent({ amount: 0, direction: null }, 70, 260);
+    const second = advanceIntent(first, 110, 260);
+    const committed = advanceIntent(second, 90, 260);
+
+    expect(first).toEqual({ amount: 70, direction: 'forward', committed: null });
+    expect(second).toEqual({ amount: 180, direction: 'forward', committed: null });
+    expect(committed).toEqual({ amount: 260, direction: 'forward', committed: 'forward' });
+  });
+
+  it('restarts intent accumulation when the wheel direction reverses', async () => {
+    const module = await import('../../src/utils/home-scroll') as Record<string, unknown>;
+    const advance = module.advanceHomeScrollIntent;
+
+    expect(advance).toBeTypeOf('function');
+    if (typeof advance !== 'function') return;
+
+    const advanceIntent = advance as (
+      state: { amount: number; direction: 'forward' | 'backward' | null },
+      deltaY: number,
+      threshold?: number,
+    ) => {
+      amount: number;
+      direction: 'forward' | 'backward' | null;
+      committed: 'forward' | 'backward' | null;
+    };
+
+    expect(
+      advanceIntent({ amount: 180, direction: 'forward' }, -40, 260),
+    ).toEqual({ amount: 40, direction: 'backward', committed: null });
+  });
+});
