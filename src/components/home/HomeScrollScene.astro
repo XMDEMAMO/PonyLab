@@ -19,12 +19,15 @@
     shouldUseNaturalHomeScroll,
     type HomeScrollIntentResult,
   } from '../../utils/home-scroll';
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
 
-  const root = document.querySelector<HTMLElement>('[data-home-scroll-scene]');
-  const sticky = root?.querySelector<HTMLElement>('[data-home-scroll-visual]');
-  const profileLayer = root?.querySelector<HTMLElement>('[data-home-profile-layer]');
+  registerClientLifecycle('home-scroll-scene', () => {
+    const root = document.querySelector<HTMLElement>('[data-home-scroll-scene]');
+    const sticky = root?.querySelector<HTMLElement>('[data-home-scroll-visual]');
+    const profileLayer = root?.querySelector<HTMLElement>('[data-home-profile-layer]');
 
-  if (root && sticky) {
+    if (root && sticky) {
+    const controller = new AbortController();
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const shortViewport = window.matchMedia(
       '(max-height: 38rem) and (orientation: landscape)',
@@ -273,14 +276,24 @@
       }
     };
 
-    window.addEventListener('scroll', scheduleUpdate, { passive: true });
-    window.addEventListener('resize', scheduleUpdate, { passive: true });
-    window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('keydown', onKeydown);
-    reducedMotion.addEventListener('change', applyMode);
-    shortViewport.addEventListener('change', applyMode);
+    window.addEventListener('scroll', scheduleUpdate, { passive: true, signal: controller.signal });
+    window.addEventListener('resize', scheduleUpdate, { passive: true, signal: controller.signal });
+    window.addEventListener('wheel', onWheel, { passive: false, signal: controller.signal });
+    window.addEventListener('keydown', onKeydown, { signal: controller.signal });
+    reducedMotion.addEventListener('change', applyMode, { signal: controller.signal });
+    shortViewport.addEventListener('change', applyMode, { signal: controller.signal });
     applyMode();
-  }
+
+    return () => {
+      controller.abort();
+      clearIntentTimer();
+      clearMotionTimer();
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
+    }
+
+    return undefined;
+  });
 </script>
 
 <style>

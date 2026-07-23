@@ -40,32 +40,30 @@ describe('P6 blog browsing boundary', () => {
     ).resolves.toEqual(expectedFiles.map(() => true));
   });
 
-  it('keeps Pagefind and optional later-phase features out until their phases', async () => {
+  it('integrates later phases without duplicating the P6 blog components', async () => {
     const packageJson = JSON.parse(await readProjectFile('package.json')) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     };
 
-    expect(packageJson.scripts).not.toHaveProperty('build:search');
-    expect(packageJson.dependencies).not.toHaveProperty('pagefind');
-    expect(packageJson.devDependencies).not.toHaveProperty('pagefind');
+    expect(packageJson.scripts).toHaveProperty('build:search');
+    expect(packageJson.devDependencies).toHaveProperty('pagefind');
     expect(await projectFileExists('src/components/blog/SearchField.astro')).toBe(
-      false,
+      true,
     );
     expect(await projectFileExists('src/components/global/GlobalMusicPlayer.astro')).toBe(
-      false,
+      true,
     );
     expect(await projectFileExists('src/components/global/ScrollProgressControl.astro')).toBe(
-      false,
+      true,
     );
   });
 
   it('keeps the project handoff documentation synchronized', async () => {
     const readme = await readProjectFile('README.md');
 
-    expect(readme).toMatch(/当前已完成 P1—P(?:6|[7-9]|1[0-3])/u);
-    expect(readme).toContain('P6 博客浏览');
-    expect(readme).toContain('p6-blog-browsing-report.md');
+    expect(readme).toContain('P0–P13 已实施');
+    expect(readme).toContain('/blog/');
   });
 });

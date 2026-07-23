@@ -1,10 +1,17 @@
 ---
 import '../styles/global.css';
 
+import { getImage } from 'astro:assets';
+import { ClientRouter } from 'astro:transitions';
+
 import GlobalBackground from '../components/global/GlobalBackground.astro';
+import BackToTop from '../components/global/BackToTop.astro';
+import GlobalMusicPlayer from '../components/global/GlobalMusicPlayer.astro';
+import ScrollProgressControl from '../components/global/ScrollProgressControl.astro';
 import SiteFooter from '../components/global/SiteFooter.astro';
 import SiteHeader from '../components/global/SiteHeader.astro';
 import { siteConfig } from '../config/site';
+import { homeConfig } from '../config/home';
 import { themeConfig } from '../config/theme';
 import { sitePaths } from '../utils/paths';
 
@@ -14,6 +21,8 @@ export interface Props {
   canonical?: string | URL;
   backgroundMode?: 'home' | 'content';
   pageClass?: string;
+  searchIndex?: boolean;
+  ogType?: 'website' | 'article';
 }
 
 const {
@@ -22,12 +31,21 @@ const {
   canonical,
   backgroundMode = 'content',
   pageClass,
+  searchIndex = false,
+  ogType = 'website',
 } = Astro.props;
 const documentTitle = title === siteConfig.name ? title : `${title} | ${siteConfig.name}`;
 const canonicalHref = canonical
   ? new URL(canonical.toString(), Astro.site).toString()
   : new URL(Astro.url.pathname, Astro.site).toString();
 const faviconHref = sitePaths.asset('favicon.ico');
+const defaultOgImage = await getImage({
+  src: homeConfig.heroScenes.dark.src,
+  width: 1200,
+  format: 'webp',
+  quality: 74,
+});
+const ogImageHref = new URL(defaultOgImage.src, Astro.site).toString();
 const hasOverlay = Astro.slots.has('overlay');
 const themeInitConfig = JSON.stringify({
   modes: themeConfig.modes,
@@ -62,14 +80,29 @@ const themeInitScript = `(() => {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalHref} />
+    <meta property="og:image" content={ogImageHref} />
+    <meta property="og:image:alt" content={homeConfig.heroScenes.dark.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={documentTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageHref} />
     <meta name="theme-color" content={themeConfig.themeColor.light} />
+    <ClientRouter />
     <link rel="icon" href={faviconHref} sizes="any" type="image/x-icon" />
     <link rel="canonical" href={canonicalHref} />
+    <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href={sitePaths.absoluteAsset('rss.xml')} />
+    <link rel="sitemap" href={sitePaths.absoluteAsset('sitemap-index.xml')} />
     <title>{documentTitle}</title>
     <script is:inline set:html={themeInitScript}></script>
     <slot name="head" />
   </head>
-  <body class:list={pageClass}>
+  <body class:list={pageClass} data-pagefind-ignore={searchIndex ? undefined : ''}>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <GlobalBackground mode={backgroundMode} />
     <SiteHeader currentPath={Astro.url.pathname} />
@@ -78,6 +111,9 @@ const themeInitScript = `(() => {
     </main>
     <SiteFooter />
     {hasOverlay && <div class="global-overlay-slot"><slot name="overlay" /></div>}
+    <ScrollProgressControl />
+    <BackToTop />
+    <GlobalMusicPlayer />
   </body>
 </html>
 

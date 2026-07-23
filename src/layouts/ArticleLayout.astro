@@ -25,6 +25,8 @@ const { post, headings, readingTime, adjacent } = Astro.props;
   description={post.data.description}
   backgroundMode="content"
   pageClass="article-page"
+  searchIndex
+  ogType="article"
 >
   <div class="article-shell page-shell">
     <ArticleHeader post={post} readingTime={readingTime} />

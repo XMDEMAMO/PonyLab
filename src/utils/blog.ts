@@ -12,6 +12,7 @@ import { filterPublishedPosts, sortPosts } from './posts';
 export const BLOG_PAGE_SIZE = 8;
 
 export interface BlogSearchState {
+  q?: string;
   tag?: string;
   category?: string;
   page: number;
@@ -44,6 +45,12 @@ export interface ArchiveYear<TPost extends PostRecord = PostRecord> {
 
 function normalizePage(page: number): number {
   return Number.isSafeInteger(page) && page > 0 ? page : 1;
+}
+
+function normalizeQuery(query: string | null | undefined): string | undefined {
+  const normalized = query?.trim().replace(/\s+/g, ' ').slice(0, 120);
+
+  return normalized || undefined;
 }
 
 function getPostTagSlugs(post: PostRecord): string[] {
@@ -122,12 +129,14 @@ export function getCategoryCounts<TPost extends PostRecord>(
 export function parseBlogSearchParams(
   params: URLSearchParams,
 ): BlogSearchState {
+  const q = normalizeQuery(params.get('q'));
   const tag = params.get('tag') ?? undefined;
   const category = params.get('category') ?? undefined;
   const pageText = params.get('page');
   const page = pageText && /^\d+$/.test(pageText) ? Number(pageText) : 1;
 
   return {
+    ...(q ? { q } : {}),
     ...(tag && getTaxonomyBySlug(tags, tag) ? { tag } : {}),
     ...(category && getTaxonomyBySlug(categories, category)
       ? { category }
@@ -140,6 +149,12 @@ export function serializeBlogSearchParams(
   state: BlogSearchState,
 ): URLSearchParams {
   const params = new URLSearchParams();
+
+  const q = normalizeQuery(state.q);
+
+  if (q) {
+    params.set('q', q);
+  }
 
   if (state.tag && getTaxonomyBySlug(tags, state.tag)) {
     params.set('tag', state.tag);

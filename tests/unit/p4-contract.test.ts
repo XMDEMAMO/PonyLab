@@ -37,7 +37,7 @@ describe('P4 homepage boundary', () => {
     ).resolves.toEqual(expectedFiles.map(() => true));
   });
 
-  it('keeps optional enhancements out of the core implementation', async () => {
+  it('keeps later global enhancements out of homepage-specific components', async () => {
     const packageJson = JSON.parse(await readProjectFile('package.json')) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
@@ -45,8 +45,6 @@ describe('P4 homepage boundary', () => {
     };
     const sourceFiles = [
       'src/pages/index.astro',
-      'src/layouts/BaseLayout.astro',
-      'src/components/global/SiteHeader.astro',
       'src/components/home/HomeHeroScene.astro',
       'src/components/home/HeroTitle.astro',
       'src/components/home/TerminalTyping.astro',
@@ -62,9 +60,8 @@ describe('P4 homepage boundary', () => {
     expect(source).not.toContain('ClientRouter');
     expect(source).not.toContain('GlobalMusicPlayer');
     expect(source).not.toContain('ScrollProgressControl');
-    expect(packageJson.scripts).not.toHaveProperty('build:search');
-    expect(packageJson.dependencies).not.toHaveProperty('pagefind');
-    expect(packageJson.devDependencies).not.toHaveProperty('pagefind');
+    expect(packageJson.scripts).toHaveProperty('build:search');
+    expect(packageJson.devDependencies).toHaveProperty('pagefind');
   });
 
   it('uses the two complete scene assets without a required character layer', async () => {
@@ -86,7 +83,7 @@ describe('P4 documentation boundary', () => {
   it('keeps the README synchronized with the implemented phase and commands', async () => {
     const readme = await readProjectFile('README.md');
 
-    expect(readme).toContain('P4');
+    expect(readme).toContain('P0–P13 已实施');
     expect(readme).toContain('npm run validate:content');
     expect(readme).toContain('npm run test:e2e');
     expect(readme).toContain('/PonyLab/');
@@ -100,7 +97,8 @@ describe('P4 documentation boundary', () => {
       scripts: Record<string, string>;
     };
 
-    expect(packageJson.scripts.build).toContain('astro build');
-    expect(packageJson.scripts.build).toContain('prune-image-masters.ts');
+    expect(packageJson.scripts.build).toContain('build:astro');
+    expect(packageJson.scripts['build:astro']).toContain('astro build');
+    expect(packageJson.scripts['build:astro']).toContain('prune-image-masters.ts');
   });
 });

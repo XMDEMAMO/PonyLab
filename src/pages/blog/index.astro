@@ -6,6 +6,7 @@ import EmptyState from '../../components/blog/EmptyState.astro';
 import FilterStatus from '../../components/blog/FilterStatus.astro';
 import Pagination from '../../components/blog/Pagination.astro';
 import PostList from '../../components/blog/PostList.astro';
+import SearchField from '../../components/blog/SearchField.astro';
 import TagFilter from '../../components/blog/TagFilter.astro';
 import PageHeader from '../../components/global/PageHeader.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -36,6 +37,7 @@ const categoryCounts = getCategoryCounts(posts);
     </nav>
 
     <BlogExplorer>
+      <SearchField slot="filters" />
       <TagFilter
         slot="filters"
         tags={tagCounts}

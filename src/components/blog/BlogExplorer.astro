@@ -25,15 +25,55 @@ import { sitePaths } from '../../utils/paths';
     serializeBlogSearchParams,
     type BlogSearchState,
   } from '../../utils/blog';
+  import {
+    createPagefindBundleConfig,
+    normalizeSearchResultPath,
+  } from '../../utils/search';
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
 
   interface FilterableCard extends HTMLElement {
     dataset: DOMStringMap & {
+      postId?: string;
       postCategory?: string;
       postTags?: string;
+      postTitle?: string;
+      postDescription?: string;
+      postUrl?: string;
     };
   }
 
+  interface PagefindData {
+    url: string;
+    meta?: Record<string, string | undefined>;
+  }
+
+  interface PagefindApi {
+    options: (options: { bundlePath: string }) => Promise<void> | void;
+    init: () => Promise<void>;
+    search: (query: string) => Promise<{
+      results: Array<{ data: () => Promise<PagefindData> }>;
+    }>;
+  }
+
+  let pagefindPromise: Promise<PagefindApi> | undefined;
+
+  const getPagefind = async (): Promise<PagefindApi> => {
+    if (!pagefindPromise) {
+      pagefindPromise = (async () => {
+        const config = createPagefindBundleConfig(import.meta.env.BASE_URL);
+        const module = (await import(/* @vite-ignore */ config.scriptUrl)) as PagefindApi;
+
+        await module.options({ bundlePath: config.bundlePath });
+        await module.init();
+        return module;
+      })();
+    }
+
+    return pagefindPromise;
+  };
+
   const initializeBlogExplorer = (explorer: HTMLElement) => {
+    const controller = new AbortController();
     const pageSize = Number(explorer.dataset.pageSize) || 8;
     const blogUrl = explorer.dataset.blogUrl ?? window.location.pathname;
     const cards = Array.from(
@@ -51,12 +91,28 @@ import { sitePaths } from '../../utils/paths';
     const filterLinks = Array.from(
       explorer.querySelectorAll<HTMLAnchorElement>('[data-filter-kind]'),
     );
+    const searchForm = explorer.querySelector<HTMLFormElement>('[data-search-form]');
+    const searchInput = explorer.querySelector<HTMLInputElement>('[data-search-input]');
+    const searchRuntime = explorer.querySelector<HTMLElement>('[data-search-runtime]');
+    const initialCards = [...cards];
+    const cardsById = new Map(cards.map((card) => [card.dataset.postId, card]));
+    const cardsByPath = new Map(
+      cards.flatMap((card) => {
+        const url = card.dataset.postUrl;
+        return url
+          ? [[normalizeSearchResultPath(url, import.meta.env.BASE_URL), card] as const]
+          : [];
+      }),
+    );
     let state = parseBlogSearchParams(new URLSearchParams(window.location.search));
+    let renderVersion = 0;
+    let searchTimer = 0;
+    let pendingInputBaseHref: string | undefined;
 
     copy?.removeAttribute('hidden');
 
-    const getMatchingCards = () =>
-      cards.filter((card) => {
+    const applyMetadataFilters = (orderedCards: readonly FilterableCard[]) =>
+      orderedCards.filter((card) => {
         const tagSlugs = card.dataset.postTags?.split(/\s+/).filter(Boolean) ?? [];
 
         return (
@@ -65,16 +121,78 @@ import { sitePaths } from '../../utils/paths';
         );
       });
 
-    const render = () => {
-      const matches = getMatchingCards();
+    const searchCards = async (): Promise<FilterableCard[]> => {
+      if (!state.q) {
+        if (searchRuntime) searchRuntime.textContent = '';
+        return initialCards;
+      }
+
+      if (import.meta.env.DEV) {
+        const query = state.q.toLocaleLowerCase('zh-CN');
+        if (searchRuntime) {
+          searchRuntime.textContent =
+            '开发预览仅搜索标题、摘要和标签；运行 npm run build 后使用 preview 可验证 Pagefind 全文搜索。';
+        }
+        return initialCards.filter((card) =>
+          [card.dataset.postTitle, card.dataset.postDescription, card.dataset.postTags]
+            .filter(Boolean)
+            .join(' ')
+            .toLocaleLowerCase('zh-CN')
+            .includes(query),
+        );
+      }
+
+      if (searchRuntime) searchRuntime.textContent = '正在查询全文索引…';
+
+      try {
+        const pagefind = await getPagefind();
+        const response = await pagefind.search(state.q);
+        const resultData = await Promise.all(
+          response.results.map((result) => result.data()),
+        );
+        const seen = new Set<FilterableCard>();
+        const ranked = resultData.flatMap((result) => {
+          const postId = result.meta?.postId;
+          const card =
+            (postId ? cardsById.get(postId) : undefined) ??
+            cardsByPath.get(
+              normalizeSearchResultPath(result.url, import.meta.env.BASE_URL),
+            );
+
+          if (!card || seen.has(card)) return [];
+          seen.add(card);
+          return [card];
+        });
+
+        if (searchRuntime) searchRuntime.textContent = 'Pagefind 已按正文相关度排序。';
+        return ranked;
+      } catch (error) {
+        console.error('Pagefind initialization failed.', error);
+        if (searchRuntime) {
+          searchRuntime.textContent =
+            '全文索引暂时不可用，已保留标题、摘要、标签筛选和静态文章入口。';
+        }
+        return initialCards;
+      }
+    };
+
+    const render = async () => {
+      const version = ++renderVersion;
+      const searchedCards = await searchCards();
+      if (version !== renderVersion) return;
+
+      const matches = applyMetadataFilters(searchedCards);
       const totalPages = Math.max(1, Math.ceil(matches.length / pageSize));
       state.page = Math.min(Math.max(1, state.page), totalPages);
       const start = (state.page - 1) * pageSize;
       const visible = new Set(matches.slice(start, start + pageSize));
 
-      for (const card of cards) {
-        card.hidden = !visible.has(card);
+      for (const card of searchedCards) list?.append(card);
+      for (const card of initialCards) {
+        if (!searchedCards.includes(card)) list?.append(card);
       }
+
+      for (const card of cards) card.hidden = !visible.has(card);
 
       if (list) list.hidden = matches.length === 0;
       if (empty) empty.hidden = matches.length !== 0;
@@ -82,11 +200,11 @@ import { sitePaths } from '../../utils/paths';
         status.textContent = cards.length === 0
           ? '暂时还没有已发布文章。'
           : matches.length === 0
-          ? '没有符合当前条件的文章。'
-          : `共 ${matches.length} 篇文章，当前显示第 ${start + 1}–${Math.min(start + pageSize, matches.length)} 篇。`;
+            ? '没有符合当前条件的文章。'
+            : `共 ${matches.length} 篇文章，当前显示第 ${start + 1}–${Math.min(start + pageSize, matches.length)} 篇。`;
       }
       if (copy) copy.textContent = '复制当前链接';
-      if (clear) clear.hidden = !state.tag && !state.category;
+      if (clear) clear.hidden = !state.q && !state.tag && !state.category;
       if (pagination) pagination.hidden = matches.length === 0 || totalPages <= 1;
       if (paginationStatus) paginationStatus.textContent = `第 ${state.page} / ${totalPages} 页`;
       if (previous) previous.disabled = state.page <= 1;
@@ -98,20 +216,28 @@ import { sitePaths } from '../../utils/paths';
         const active = Boolean(kind && value && state[kind] === value);
 
         link.toggleAttribute('data-active', active);
-        if (active) {
-          link.setAttribute('aria-current', 'true');
-        } else {
-          link.removeAttribute('aria-current');
-        }
+        active
+          ? link.setAttribute('aria-current', 'true')
+          : link.removeAttribute('aria-current');
       }
     };
 
-    const commit = (nextState: BlogSearchState, mode: 'push' | 'replace' = 'push') => {
+    const commit = async (
+      nextState: BlogSearchState,
+      mode: 'push' | 'replace' = 'push',
+    ) => {
       state = nextState;
-      render();
+      if (searchInput && searchInput.value !== (state.q ?? '')) {
+        searchInput.value = state.q ?? '';
+      }
       const params = serializeBlogSearchParams(state).toString();
       const href = params ? `${blogUrl}?${params}` : blogUrl;
+      if (mode === 'push' && pendingInputBaseHref) {
+        window.history.replaceState({}, '', pendingInputBaseHref);
+        pendingInputBaseHref = undefined;
+      }
       window.history[mode === 'push' ? 'pushState' : 'replaceState']({}, '', href);
+      await render();
     };
 
     for (const link of filterLinks) {
@@ -129,26 +255,36 @@ import { sitePaths } from '../../utils/paths';
           event.altKey
         ) return;
         event.preventDefault();
-        commit({
-          ...state,
-          [kind]: state[kind] === value ? undefined : value,
-          page: 1,
-        });
-      });
+        commit({ ...state, [kind]: state[kind] === value ? undefined : value, page: 1 });
+      }, { signal: controller.signal });
     }
 
     clear?.addEventListener('click', (event) => {
       event.preventDefault();
       commit({ page: 1 });
-    });
+    }, { signal: controller.signal });
+
+    searchForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      window.clearTimeout(searchTimer);
+      commit({ ...state, q: searchInput?.value, page: 1 });
+    }, { signal: controller.signal });
+
+    searchInput?.addEventListener('input', () => {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(() => {
+        pendingInputBaseHref ??= window.location.href;
+        commit({ ...state, q: searchInput.value, page: 1 }, 'replace');
+      }, 280);
+    }, { signal: controller.signal });
 
     previous?.addEventListener('click', () => {
       commit({ ...state, page: state.page - 1 });
-    });
+    }, { signal: controller.signal });
 
     next?.addEventListener('click', () => {
       commit({ ...state, page: state.page + 1 });
-    });
+    }, { signal: controller.signal });
 
     copy?.addEventListener('click', async () => {
       try {
@@ -157,18 +293,30 @@ import { sitePaths } from '../../utils/paths';
       } catch {
         copy.textContent = '复制失败，请复制地址栏链接';
       }
-    });
+    }, { signal: controller.signal });
 
     window.addEventListener('popstate', () => {
+      pendingInputBaseHref = undefined;
       state = parseBlogSearchParams(new URLSearchParams(window.location.search));
+      if (searchInput) searchInput.value = state.q ?? '';
       render();
-    });
+    }, { signal: controller.signal });
 
-    render();
     commit(state, 'replace');
+    return () => {
+      window.clearTimeout(searchTimer);
+      controller.abort();
+    };
   };
 
-  document.querySelectorAll<HTMLElement>('[data-blog-explorer]').forEach(initializeBlogExplorer);
+  registerClientLifecycle('blog-explorer', () => {
+    const cleanups = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-blog-explorer]'),
+      initializeBlogExplorer,
+    );
+
+    return () => cleanups.forEach((cleanup) => cleanup());
+  });
 </script>
 
 <style>
@@ -190,8 +338,6 @@ import { sitePaths } from '../../utils/paths';
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .blog-explorer__toolbar {
-      backdrop-filter: none;
-    }
+    .blog-explorer__toolbar { backdrop-filter: none; }
   }
 </style>

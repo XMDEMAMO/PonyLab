@@ -18,7 +18,7 @@ async function projectFileExists(pathname: string): Promise<boolean> {
 }
 
 describe('P5 homepage scroll boundary', () => {
-  it('adds the scroll scene and pure progress model without later-phase features', async () => {
+  it('adds the scroll scene and keeps global enhancements outside the homepage route', async () => {
     await expect(
       Promise.all([
         projectFileExists('src/components/home/HomeScrollScene.astro'),
@@ -26,18 +26,12 @@ describe('P5 homepage scroll boundary', () => {
       ]),
     ).resolves.toEqual([true, true]);
 
-    const packageJson = JSON.parse(await readProjectFile('package.json')) as {
-      dependencies: Record<string, string>;
-      devDependencies: Record<string, string>;
-    };
     const homepage = await readProjectFile('src/pages/index.astro');
 
     expect(homepage).toContain('HomeScrollScene');
     expect(homepage).not.toContain('ClientRouter');
     expect(homepage).not.toContain('GlobalMusicPlayer');
     expect(homepage).not.toContain('ScrollProgressControl');
-    expect(packageJson.dependencies).not.toHaveProperty('pagefind');
-    expect(packageJson.devDependencies).not.toHaveProperty('pagefind');
   });
 
   it('uses one requestAnimationFrame scheduler and never targets the scene image', async () => {
@@ -72,9 +66,8 @@ describe('P5 homepage scroll boundary', () => {
     ]);
 
     expect(reportExists).toBe(true);
-    expect(readme).toContain('此前完成的 P5 首页三阶段滚动');
-    expect(readme).toContain('HomeScrollScene');
-    expect(readme).toContain('p5-home-scroll-report.md');
+    expect(readme).toContain('P0–P13 已实施');
+    expect(readme).toContain('三阶段滚动');
   });
 });
 

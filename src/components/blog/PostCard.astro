@@ -30,6 +30,9 @@ const postTags = post.data.tags.flatMap((name) => {
   data-post-id={post.id}
   data-post-category={category?.slug}
   data-post-tags={postTags.map((tag) => tag.slug).join(' ')}
+  data-post-title={post.data.title}
+  data-post-description={post.data.description}
+  data-post-url={articleHref}
 >
   <div class="post-card__cover-frame">
     <Image

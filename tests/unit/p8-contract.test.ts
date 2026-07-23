@@ -70,10 +70,9 @@ describe('P8 projects and about boundary', () => {
   it('advances the project handoff and links the P8 report', async () => {
     const readme = await readProjectFile('README.md');
 
-    expect(readme).toContain('当前已完成 P1—P8');
+    expect(readme).toContain('P0–P13 已实施');
     expect(readme).toContain('/projects/');
     expect(readme).toContain('/about/');
-    expect(readme).toContain('p8-projects-about-report.md');
   });
 
   it('keeps an empty project collection understandable without JavaScript', async () => {
@@ -83,17 +82,16 @@ describe('P8 projects and about boundary', () => {
     expect(projectGrid).toContain('data-project-empty');
   });
 
-  it('does not start Pagefind, ClientRouter, music, or the scroll control in P8', async () => {
+  it('contains the later Pagefind, music, and scroll phases after P8 completion', async () => {
     const packageJson = JSON.parse(await readProjectFile('package.json')) as {
       scripts: Record<string, string>;
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     };
 
-    expect(packageJson.scripts).not.toHaveProperty('build:search');
-    expect(packageJson.dependencies).not.toHaveProperty('pagefind');
-    expect(packageJson.devDependencies).not.toHaveProperty('pagefind');
-    expect(await projectFileExists('src/components/global/GlobalMusicPlayer.astro')).toBe(false);
-    expect(await projectFileExists('src/components/global/ScrollProgressControl.astro')).toBe(false);
+    expect(packageJson.scripts).toHaveProperty('build:search');
+    expect(packageJson.devDependencies).toHaveProperty('pagefind');
+    expect(await projectFileExists('src/components/global/GlobalMusicPlayer.astro')).toBe(true);
+    expect(await projectFileExists('src/components/global/ScrollProgressControl.astro')).toBe(true);
   });
 });

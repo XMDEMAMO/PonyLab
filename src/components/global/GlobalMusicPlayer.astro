@@ -1,0 +1,393 @@
+---
+import { getImage } from 'astro:assets';
+
+import { musicPlaylist } from '../../data/playlist';
+
+const browserTracks = await Promise.all(
+  musicPlaylist.map(async (track) => {
+    const cover = await getImage({
+      src: track.cover,
+      width: 160,
+      height: 160,
+      fit: 'cover',
+      format: 'webp',
+      quality: 72,
+    });
+
+    return {
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      src: track.src,
+      coverSrc: cover.src,
+      coverAlt: track.coverAlt,
+    };
+  }),
+);
+---
+
+<global-music-player
+  class="music-player"
+  data-music-player
+  data-playlist={JSON.stringify(browserTracks)}
+  data-storage-key="ponylab-music-state-v1"
+  data-expanded="false"
+  transition:persist="global-music-player"
+>
+  <audio data-music-audio preload="metadata"></audio>
+
+  <button
+    class="music-player__toggle"
+    type="button"
+    data-music-toggle
+    aria-expanded="false"
+    aria-controls="global-music-panel"
+  >
+    <span class="music-player__pulse" aria-hidden="true"></span>
+    <span data-music-toggle-label>音乐</span>
+  </button>
+
+  <section id="global-music-panel" class="music-player__panel" aria-label="全局音乐播放器">
+    <div class="music-player__identity">
+      <img data-music-cover src={browserTracks[0]?.coverSrc} alt="" width="64" height="64" />
+      <div>
+        <strong data-music-title>{browserTracks[0]?.title}</strong>
+        <span data-music-artist>{browserTracks[0]?.artist}</span>
+      </div>
+      <button type="button" data-music-close aria-label="收起音乐播放器">×</button>
+    </div>
+
+    <div class="music-player__controls">
+      <button type="button" data-music-previous aria-label="上一首">‹</button>
+      <button type="button" class="music-player__play" data-music-play aria-label="播放">▶</button>
+      <button type="button" data-music-next aria-label="下一首">›</button>
+    </div>
+
+    <div class="music-player__timeline">
+      <span data-music-current>0:00</span>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value="0"
+        step="0.1"
+        data-music-seek
+        aria-label="播放进度"
+      />
+      <span data-music-duration>0:00</span>
+    </div>
+
+    <label class="music-player__volume">
+      <span>音量</span>
+      <input type="range" min="0" max="1" value="0.65" step="0.05" data-music-volume />
+    </label>
+    <p class="music-player__status" data-music-status aria-live="polite">准备播放</p>
+  </section>
+</global-music-player>
+
+<script>
+  interface BrowserTrack {
+    id: string;
+    title: string;
+    artist: string;
+    src: string;
+    coverSrc: string;
+    coverAlt: string;
+  }
+
+  interface StoredState {
+    trackIndex: number;
+    currentTime: number;
+    volume: number;
+  }
+
+  interface ModalOpenDetail {
+    source?: string;
+  }
+
+  const formatTime = (seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    const whole = Math.floor(seconds);
+    return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+  };
+
+  class GlobalMusicPlayerElement extends HTMLElement {
+    connectedCallback(): void {
+      if (this.dataset.enhanced === 'true') return;
+      this.dataset.enhanced = 'true';
+
+      const audio = this.querySelector<HTMLAudioElement>('[data-music-audio]');
+      const play = this.querySelector<HTMLButtonElement>('[data-music-play]');
+      const previous = this.querySelector<HTMLButtonElement>('[data-music-previous]');
+      const next = this.querySelector<HTMLButtonElement>('[data-music-next]');
+      const seek = this.querySelector<HTMLInputElement>('[data-music-seek]');
+      const volume = this.querySelector<HTMLInputElement>('[data-music-volume]');
+      const title = this.querySelector<HTMLElement>('[data-music-title]');
+      const artist = this.querySelector<HTMLElement>('[data-music-artist]');
+      const cover = this.querySelector<HTMLImageElement>('[data-music-cover]');
+      const current = this.querySelector<HTMLElement>('[data-music-current]');
+      const duration = this.querySelector<HTMLElement>('[data-music-duration]');
+      const status = this.querySelector<HTMLElement>('[data-music-status]');
+      const toggle = this.querySelector<HTMLButtonElement>('[data-music-toggle]');
+      const close = this.querySelector<HTMLButtonElement>('[data-music-close]');
+      const tracks = JSON.parse(this.dataset.playlist ?? '[]') as BrowserTrack[];
+      const storageKey = this.dataset.storageKey ?? 'ponylab-music-state-v1';
+
+      if (!audio || !play || !seek || !volume || tracks.length === 0) return;
+
+      let trackIndex = 0;
+      let restoreTime = 0;
+      let lastStoredSecond = -1;
+
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) ?? 'null') as StoredState | null;
+        if (stored) {
+          trackIndex = Math.min(Math.max(0, stored.trackIndex), tracks.length - 1);
+          restoreTime = Math.max(0, stored.currentTime || 0);
+          audio.volume = Math.min(Math.max(0, stored.volume), 1);
+        } else {
+          audio.volume = 0.65;
+        }
+      } catch {
+        audio.volume = 0.65;
+      }
+      volume.value = String(audio.volume);
+
+      const persist = (): void => {
+        try {
+          localStorage.setItem(
+            storageKey,
+            JSON.stringify({ trackIndex, currentTime: audio.currentTime || 0, volume: audio.volume }),
+          );
+        } catch {
+          // Playback remains available when storage is blocked.
+        }
+      };
+
+      const renderTrack = (): void => {
+        const track = tracks[trackIndex]!;
+        if (title) title.textContent = track.title;
+        if (artist) artist.textContent = track.artist;
+        if (cover) {
+          cover.src = track.coverSrc;
+          cover.alt = track.coverAlt;
+        }
+      };
+
+      const setTrack = async (index: number, continuePlaying: boolean): Promise<void> => {
+        trackIndex = (index + tracks.length) % tracks.length;
+        restoreTime = 0;
+        renderTrack();
+        audio.src = tracks[trackIndex]!.src;
+        audio.load();
+        persist();
+        if (continuePlaying) {
+          try {
+            await audio.play();
+          } catch {
+            if (status) status.textContent = '浏览器阻止了播放，请再次点击播放。';
+          }
+        }
+      };
+
+      const setExpanded = (expanded: boolean): void => {
+        this.dataset.expanded = String(expanded);
+        toggle?.setAttribute('aria-expanded', String(expanded));
+        if (expanded) {
+          window.dispatchEvent(
+            new CustomEvent<ModalOpenDetail>('ponylab:modal-open', {
+              detail: { source: 'music' },
+            }),
+          );
+        }
+      };
+
+      renderTrack();
+      audio.src = tracks[trackIndex]!.src;
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (restoreTime > 0 && Number.isFinite(audio.duration)) {
+          audio.currentTime = Math.min(restoreTime, Math.max(0, audio.duration - 0.1));
+          restoreTime = 0;
+        }
+        seek.max = String(audio.duration || 0);
+        if (duration) duration.textContent = formatTime(audio.duration);
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        seek.value = String(audio.currentTime);
+        if (current) current.textContent = formatTime(audio.currentTime);
+        const second = Math.floor(audio.currentTime);
+        if (second !== lastStoredSecond) {
+          lastStoredSecond = second;
+          persist();
+        }
+      });
+      audio.addEventListener('play', () => {
+        play.textContent = '❚❚';
+        play.setAttribute('aria-label', '暂停');
+        if (status) status.textContent = '正在播放';
+      });
+      audio.addEventListener('pause', () => {
+        play.textContent = '▶';
+        play.setAttribute('aria-label', '播放');
+        if (status) status.textContent = '已暂停';
+        persist();
+      });
+      audio.addEventListener('ended', () => void setTrack(trackIndex + 1, true));
+      audio.addEventListener('error', () => {
+        if (status) status.textContent = '音频加载失败，可切换曲目或稍后重试。';
+        play.textContent = '▶';
+        play.setAttribute('aria-label', '播放');
+      });
+
+      play.addEventListener('click', async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+          } catch {
+            if (status) {
+              status.textContent = audio.error
+                ? '音频加载失败，可切换曲目或稍后重试。'
+                : '播放未开始，请检查浏览器媒体权限。';
+            }
+          }
+        } else {
+          audio.pause();
+        }
+      });
+      previous?.addEventListener('click', () => void setTrack(trackIndex - 1, !audio.paused));
+      next?.addEventListener('click', () => void setTrack(trackIndex + 1, !audio.paused));
+      seek.addEventListener('input', () => {
+        audio.currentTime = Number(seek.value);
+        persist();
+      });
+      volume.addEventListener('input', () => {
+        audio.volume = Number(volume.value);
+        persist();
+      });
+      toggle?.addEventListener('click', () => setExpanded(this.dataset.expanded !== 'true'));
+      close?.addEventListener('click', () => setExpanded(false));
+      window.addEventListener('ponylab:modal-open', (event) => {
+        const detail = (event as CustomEvent<ModalOpenDetail>).detail;
+        if (detail?.source !== 'music') setExpanded(false);
+      });
+    }
+  }
+
+  if (!customElements.get('global-music-player')) {
+    customElements.define('global-music-player', GlobalMusicPlayerElement);
+  }
+</script>
+
+<style>
+  .music-player {
+    position: fixed;
+    z-index: 45;
+    bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+    left: max(var(--space-5), env(safe-area-inset-left));
+    display: grid;
+    color: var(--color-text);
+  }
+
+  .music-player__toggle {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-self: start;
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
+    box-shadow: var(--shadow-floating);
+    backdrop-filter: blur(0.8rem);
+  }
+
+  .music-player__pulse {
+    width: 0.55rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--color-accent-warm);
+    box-shadow: 0 0 0.75rem color-mix(in srgb, var(--color-accent-warm) 65%, transparent);
+  }
+
+  .music-player__panel {
+    display: none;
+    width: min(22rem, calc(100vw - 2rem));
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface-strong) 94%, transparent);
+    box-shadow: var(--shadow-floating);
+    backdrop-filter: blur(1rem);
+  }
+
+  .music-player[data-expanded='true'] .music-player__panel { display: grid; }
+  .music-player[data-expanded='true'] .music-player__toggle { display: none; }
+
+  .music-player__identity {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .music-player__identity img {
+    width: 3.5rem;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+
+  .music-player__identity div { display: grid; min-width: 0; }
+  .music-player__identity strong,
+  .music-player__identity span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .music-player__identity span { color: var(--color-text-muted); font-size: 0.78rem; }
+
+  button,
+  input { accent-color: var(--color-accent-warm); }
+  button { cursor: pointer; }
+  .music-player__identity button,
+  .music-player__controls button {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-bg-elevated);
+  }
+
+  .music-player__controls { display: flex; justify-content: center; gap: var(--space-3); }
+  .music-player__play { transform: scale(1.1); }
+
+  .music-player__timeline {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font: 0.7rem var(--font-mono);
+  }
+  .music-player__timeline input { width: 100%; }
+  .music-player__volume { display: flex; align-items: center; gap: var(--space-3); font-size: 0.76rem; }
+  .music-player__volume input { flex: 1; }
+  .music-player__status { color: var(--color-text-muted); font-size: 0.76rem; text-align: center; }
+
+  @media (max-width: 47.99rem) {
+    .music-player {
+      right: max(var(--space-3), env(safe-area-inset-right));
+      bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+      left: max(var(--space-3), env(safe-area-inset-left));
+    }
+    .music-player__toggle { justify-self: end; }
+    .music-player__panel { width: 100%; justify-self: stretch; }
+  }
+
+  @media print {
+    .music-player { display: none; }
+  }
+</style>

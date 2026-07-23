@@ -40,16 +40,25 @@ const sessionSummary = config.sessions
 </div>
 
 <script>
+  import { registerClientLifecycle } from '../../utils/client-lifecycle';
+
   type TerminalSession = {
     command: string;
     output: string;
   };
 
-  const wait = (duration: number): Promise<void> => new Promise((resolve) => {
-    window.setTimeout(resolve, duration);
-  });
+  registerClientLifecycle('terminal-typing', () => {
+    let active = true;
+    const timers = new Set<number>();
+    const wait = (duration: number): Promise<void> => new Promise((resolve) => {
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        resolve();
+      }, duration);
+      timers.add(timer);
+    });
 
-  document.querySelectorAll<HTMLElement>('[data-terminal-typing-root]').forEach((root) => {
+    document.querySelectorAll<HTMLElement>('[data-terminal-typing-root]').forEach((root) => {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       root.dataset.terminalState = 'static';
       return;
@@ -70,6 +79,7 @@ const sessionSummary = config.sessions
     const typeText = async (target: HTMLElement, text: string): Promise<void> => {
       target.textContent = '';
       for (const character of [...text]) {
+        if (!active) return;
         target.textContent += character;
         await wait(characterIntervalMs);
       }
@@ -78,7 +88,7 @@ const sessionSummary = config.sessions
     const run = async (): Promise<void> => {
       let index = 0;
 
-      while (true) {
+      while (active) {
         const currentSession = sessions[index];
         output.textContent = '';
         root.dataset.terminalSessionIndex = String(index);
@@ -99,6 +109,12 @@ const sessionSummary = config.sessions
     };
 
     void run();
+    });
+
+    return () => {
+      active = false;
+      timers.forEach(window.clearTimeout);
+    };
   });
 </script>
 

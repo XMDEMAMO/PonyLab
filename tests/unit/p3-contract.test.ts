@@ -18,7 +18,7 @@ async function projectFileExists(pathname: string): Promise<boolean> {
 }
 
 describe('P3 command and dependency boundary', () => {
-  it('adds Chromium Playwright without future-stage dependencies', async () => {
+  it('keeps the P3 E2E entrypoint while later phases extend the build', async () => {
     const packageJson = JSON.parse(await readProjectFile('package.json')) as {
       scripts: Record<string, string>;
       devDependencies: Record<string, string>;
@@ -26,22 +26,21 @@ describe('P3 command and dependency boundary', () => {
 
     expect(packageJson.scripts['test:e2e']).toBe('tsx scripts/run-e2e.ts');
     expect(packageJson.devDependencies).toHaveProperty('@playwright/test');
-    expect(packageJson.scripts).not.toHaveProperty('build:search');
-    expect(packageJson.devDependencies).not.toHaveProperty('pagefind');
+    expect(packageJson.scripts).toHaveProperty('build:search');
+    expect(packageJson.devDependencies).toHaveProperty('pagefind');
   });
 
   it('runs the production build before Chromium E2E in CI', async () => {
     const workflow = await readProjectFile('.github/workflows/ci.yml');
 
-    expect(workflow).toContain('npx playwright install --with-deps chromium');
+    expect(workflow).toContain('npx playwright install --with-deps chromium firefox');
     expect(workflow).toContain('npm run test:e2e');
     expect(workflow.indexOf('npm run build')).toBeLessThan(
       workflow.indexOf('npm run test:e2e'),
     );
     expect(workflow).toContain('playwright-report');
     expect(workflow).toContain('test-results');
-    expect(workflow).not.toContain('firefox');
-    expect(workflow).not.toContain('pagefind');
+    expect(workflow).toContain('firefox');
   });
 });
 
@@ -76,7 +75,7 @@ describe('P3 global shell boundary', () => {
     expect(await projectFileExists('public/favicon.svg')).toBe(false);
   });
 
-  it('does not introduce ClientRouter or later-stage global features', async () => {
+  it('keeps later global features centralized in the shared layout', async () => {
     const sourceFiles = [
       'src/layouts/BaseLayout.astro',
       'src/components/global/SiteHeader.astro',
@@ -86,8 +85,8 @@ describe('P3 global shell boundary', () => {
       await Promise.all(sourceFiles.map((pathname) => readProjectFile(pathname)))
     ).join('\n');
 
-    expect(source).not.toContain('ClientRouter');
-    expect(source).not.toContain('GlobalMusicPlayer');
-    expect(source).not.toContain('ScrollProgressControl');
+    expect(source.match(/ClientRouter/g)).toHaveLength(2);
+    expect(source.match(/GlobalMusicPlayer/g)).toHaveLength(3);
+    expect(source.match(/ScrollProgressControl/g)).toHaveLength(3);
   });
 });
