@@ -23,6 +23,7 @@ export interface TerminalSessionConfig {
 }
 
 export interface TerminalTypingConfig {
+  prompt: string;
   sessions: readonly TerminalSessionConfig[];
   characterIntervalMs: number;
   outputDelayMs: number;
@@ -70,17 +71,18 @@ export const homeConfig = {
   titleLines: ['Pony', 'Lab'],
   subtitle: '在冷雾与代码之间，记录技术学习、项目实践与个人兴趣。',
   terminal: {
+    prompt: 'ponylab:~$',
     sessions: [
       {
-        command: 'ponylab:~$ whoami',
+        command: 'whoami',
         output: 'Developer · Learner · Dreamer',
       },
       {
-        command: 'ponylab:~$ cat current-focus.txt',
+        command: 'cat current-focus.txt',
         output: 'Astro · TypeScript · Frontend',
       },
       {
-        command: 'ponylab:~$ echo $STATUS',
+        command: 'echo $STATUS',
         output: '记录代码，也记录生活。',
       },
     ],

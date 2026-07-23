@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+const fixedPrompt = 'ponylab:~$';
+
 const firstSession = {
-  command: 'ponylab:~$ whoami',
+  command: 'whoami',
   output: 'Developer · Learner · Dreamer',
 };
 
 const secondSession = {
-  command: 'ponylab:~$ cat current-focus.txt',
+  command: 'cat current-focus.txt',
   output: 'Astro · TypeScript · Frontend',
 };
 
@@ -16,8 +18,10 @@ test('cycles the terminal through the exact second session', async ({ page }) =>
 
   const terminal = page.locator('[data-terminal-typing-root]');
   const content = terminal.locator('.terminal__content');
+  const prompt = terminal.locator('[data-terminal-prompt]');
   const command = terminal.locator('[data-terminal-command]');
   const output = terminal.locator('[data-terminal-output]');
+  await expect(prompt).toHaveText(fixedPrompt);
   await expect(terminal).toHaveAttribute('data-terminal-state', /typing-command|typing-output|holding/);
   await expect(terminal).toHaveAttribute('data-terminal-state', 'holding', {
     timeout: 8_000,
@@ -34,6 +38,7 @@ test('cycles the terminal through the exact second session', async ({ page }) =>
   );
   await expect(command).toHaveText(secondSession.command, { timeout: 8_000 });
   await expect(output).toHaveText(secondSession.output, { timeout: 8_000 });
+  await expect(prompt).toHaveText(fixedPrompt);
 });
 
 test('switching theme keeps the terminal loop on its current session', async ({ page }) => {
@@ -59,9 +64,11 @@ test.describe('without JavaScript', () => {
     await page.goto('./');
 
     const terminal = page.locator('[data-terminal-typing-root]');
+    const prompt = terminal.locator('[data-terminal-prompt]');
     const command = terminal.locator('[data-terminal-command]');
     const output = terminal.locator('[data-terminal-output]');
     await expect(terminal).toHaveAttribute('data-terminal-state', 'fallback');
+    await expect(prompt).toHaveText(fixedPrompt);
     await expect(command).toHaveText(firstSession.command);
     await expect(output).toHaveText(firstSession.output);
   });
@@ -74,9 +81,11 @@ test.describe('reduced motion', () => {
     await page.goto('./');
 
     const terminal = page.locator('[data-terminal-typing-root]');
+    const prompt = terminal.locator('[data-terminal-prompt]');
     const command = terminal.locator('[data-terminal-command]');
     const output = terminal.locator('[data-terminal-output]');
     await expect(terminal).toHaveAttribute('data-terminal-state', 'static');
+    await expect(prompt).toHaveText(fixedPrompt);
     await expect(command).toHaveText(firstSession.command);
     await expect(output).toHaveText(firstSession.output);
   });

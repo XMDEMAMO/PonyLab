@@ -9,20 +9,26 @@ describe('homeConfig', () => {
     expect(homeConfig.title).toBe('PonyLab');
     expect(homeConfig.titleLines).toEqual(['Pony', 'Lab']);
     expect(homeConfig.subtitle.length).toBeGreaterThan(0);
+    expect(homeConfig.terminal.prompt).toBe('ponylab:~$');
     expect(homeConfig.terminal.sessions).toEqual([
       {
-        command: 'ponylab:~$ whoami',
+        command: 'whoami',
         output: 'Developer · Learner · Dreamer',
       },
       {
-        command: 'ponylab:~$ cat current-focus.txt',
+        command: 'cat current-focus.txt',
         output: 'Astro · TypeScript · Frontend',
       },
       {
-        command: 'ponylab:~$ echo $STATUS',
+        command: 'echo $STATUS',
         output: '记录代码，也记录生活。',
       },
     ]);
+    expect(
+      homeConfig.terminal.sessions.every(({ command }) =>
+        !command.includes(homeConfig.terminal.prompt),
+      ),
+    ).toBe(true);
     expect(homeConfig.terminal.characterIntervalMs).toBe(42);
     expect(homeConfig.terminal.outputDelayMs).toBe(180);
     expect(homeConfig.terminal.sessionHoldMs).toBe(1800);

@@ -114,6 +114,8 @@ describe('homepage terminal configuration flow', () => {
     expect(terminalTyping).toContain('data-terminal-output-delay-ms');
     expect(terminalTyping).toContain('data-terminal-session-hold-ms');
     expect(terminalTyping).toContain('data-terminal-transition-ms');
+    expect(terminalTyping).toContain('data-terminal-prompt');
+    expect(terminalTyping).toContain('{config.prompt}');
     expect(terminalTyping).toContain('--terminal-transition-duration');
     expect(terminalTyping).toContain('config.transitionMs');
     expect(terminalTyping).toContain('class="visually-hidden"');
@@ -129,5 +131,8 @@ describe('homepage terminal configuration flow', () => {
     );
     expect(clearPreviousOutput).toBeGreaterThan(-1);
     expect(clearPreviousOutput).toBeLessThan(startTypingCommand);
+    expect(terminalTyping).not.toContain(
+      "[data-terminal-state='transitioning'] .terminal__content",
+    );
   });
 });

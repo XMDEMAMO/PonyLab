@@ -8,7 +8,7 @@ export interface Props {
 const { config } = Astro.props;
 const session = config.sessions[0];
 const sessionSummary = config.sessions
-  .map(({ command, output }) => `${command}；${output}`)
+  .map(({ command, output }) => `${config.prompt} ${command}；${output}`)
   .join('。');
 ---
 
@@ -31,8 +31,11 @@ const sessionSummary = config.sessions
     <span></span><span></span><span></span>
   </div>
   <div class="terminal__content" aria-hidden="true">
-    <p class="terminal__prompt"><span data-terminal-command>{session.command}</span><span class="terminal__cursor"></span></p>
-    <p><span data-terminal-output>{session.output}</span></p>
+    <p class="terminal__prompt">
+      <span data-terminal-prompt>{config.prompt}</span>{' '}
+      <span class="terminal__command"><span data-terminal-command>{session.command}</span><span class="terminal__cursor"></span></span>
+    </p>
+    <p class="terminal__output"><span data-terminal-output>{session.output}</span></p>
   </div>
 </div>
 
@@ -136,11 +139,15 @@ const sessionSummary = config.sessions
     font-family: var(--font-mono);
     font-size: clamp(0.76rem, 1.4vw, 0.9rem);
     line-height: 1.65;
-    transition: opacity var(--terminal-transition-duration) ease;
   }
 
   .terminal__prompt {
     color: #d7c766;
+  }
+
+  .terminal__command,
+  .terminal__output {
+    transition: opacity var(--terminal-transition-duration) ease;
   }
 
   .terminal__cursor {
@@ -153,7 +160,8 @@ const sessionSummary = config.sessions
     animation: terminal-cursor 900ms steps(1, end) infinite;
   }
 
-  [data-terminal-state='transitioning'] .terminal__content {
+  [data-terminal-state='transitioning'] .terminal__command,
+  [data-terminal-state='transitioning'] .terminal__output {
     opacity: 0;
   }
 
@@ -173,7 +181,8 @@ const sessionSummary = config.sessions
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .terminal__content,
+    .terminal__command,
+    .terminal__output,
     .terminal__cursor {
       animation: none;
       transition: none;
