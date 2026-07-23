@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 
 import HomeHeroScene from '../components/home/HomeHeroScene.astro';
+import HomeScrollScene from '../components/home/HomeScrollScene.astro';
 import HeroTitle from '../components/home/HeroTitle.astro';
 import HomeSectionTransition from '../components/home/HomeSectionTransition.astro';
 import LatestPosts from '../components/home/LatestPosts.astro';
@@ -24,29 +25,31 @@ const postStats = getHomePostStats(allPosts);
   backgroundMode="home"
   pageClass="home-page"
 >
-  <section class="home-hero" aria-label="PonyLab 首页主视觉">
-    <HomeHeroScene scenes={homeConfig.heroScenes} />
-    <div class="home-hero__content page-shell">
-      <div class="home-hero__title">
-        <HeroTitle
-          eyebrow={homeConfig.eyebrow}
-          title={homeConfig.title}
-          titleLines={homeConfig.titleLines}
-          subtitle={homeConfig.subtitle}
-          typingLines={homeConfig.typingLines}
-        />
+  <HomeScrollScene>
+    <section class="home-hero" aria-label="PonyLab 首页主视觉">
+      <HomeHeroScene scenes={homeConfig.heroScenes} />
+      <div class="home-hero__content page-shell">
+        <div class="home-hero__title" data-home-title-layer>
+          <HeroTitle
+            eyebrow={homeConfig.eyebrow}
+            title={homeConfig.title}
+            titleLines={homeConfig.titleLines}
+            subtitle={homeConfig.subtitle}
+            typingLines={homeConfig.typingLines}
+          />
+        </div>
+        <div class="home-hero__profile" data-home-profile-layer>
+          <ProfileCard
+            author={siteConfig.author}
+            statusLabel={homeConfig.profile.statusLabel}
+            statusText={homeConfig.profile.statusText}
+            actionLabel={homeConfig.profile.actionLabel}
+            actionHref={sitePaths.page(homeConfig.profile.actionHref)}
+          />
+        </div>
       </div>
-      <div class="home-hero__profile">
-        <ProfileCard
-          author={siteConfig.author}
-          statusLabel={homeConfig.profile.statusLabel}
-          statusText={homeConfig.profile.statusText}
-          actionLabel={homeConfig.profile.actionLabel}
-          actionHref={sitePaths.page(homeConfig.profile.actionHref)}
-        />
-      </div>
-    </div>
-  </section>
+    </section>
+  </HomeScrollScene>
 
   <HomeSectionTransition />
 
@@ -97,9 +100,25 @@ const postStats = getHomePostStats(allPosts);
     min-width: 0;
   }
 
+  :global([data-home-scroll-mode='enhanced']) .home-hero__title {
+    opacity: calc(1 - var(--home-title-exit));
+    transform: translate3d(0, calc(var(--home-title-exit) * -1.75rem), 0);
+    will-change: opacity, transform;
+  }
+
   .home-hero__profile {
     align-self: start;
     padding-top: clamp(2rem, 8vh, 6rem);
+  }
+
+  :global([data-home-scroll-mode='enhanced']) .home-hero__profile {
+    opacity: var(--home-profile-enter);
+    transform: translate3d(
+      calc((1 - var(--home-profile-enter)) * 2rem),
+      calc((1 - var(--home-profile-enter)) * 3.5rem),
+      0
+    );
+    will-change: opacity, transform;
   }
 
   .home-content {
@@ -132,6 +151,40 @@ const postStats = getHomePostStats(allPosts);
       align-self: end;
       padding-top: 0;
     }
+
+    :global([data-home-scroll-mode='enhanced']) .home-hero__content {
+      height: 100%;
+      min-height: 100%;
+      grid-template-rows: minmax(0, 1fr);
+      align-content: stretch;
+      gap: 0;
+    }
+
+    :global([data-home-scroll-mode='enhanced']) .home-hero__title,
+    :global([data-home-scroll-mode='enhanced']) .home-hero__profile {
+      grid-area: 1 / 1;
+    }
+
+    :global([data-home-scroll-mode='enhanced']) .home-hero__title {
+      align-self: start;
+    }
+
+    :global([data-home-scroll-mode='enhanced']) .home-hero__profile {
+      align-self: start;
+      padding-top: var(--space-6);
+      transform: translate3d(
+        0,
+        calc((1 - var(--home-profile-enter)) * 2.5rem),
+        0
+      );
+    }
+
+    :global(html[data-theme='dark'])
+      :global([data-home-scroll-mode='enhanced'])
+      .home-hero__profile {
+      align-self: end;
+      padding-block: 0 var(--space-6);
+    }
   }
 
   @media (max-height: 38rem) and (orientation: landscape) {
@@ -147,6 +200,15 @@ const postStats = getHomePostStats(allPosts);
 
     .home-hero__profile {
       padding-top: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-hero__title,
+    .home-hero__profile {
+      opacity: 1;
+      transform: none;
+      will-change: auto;
     }
   }
 </style>

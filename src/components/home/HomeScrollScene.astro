@@ -1,0 +1,153 @@
+<div
+  class="home-scroll-scene"
+  data-home-scroll-scene
+  data-home-scroll-mode="natural"
+  data-home-scroll-stage="all"
+>
+  <div class="home-scroll-scene__sticky" data-home-scroll-visual>
+    <slot />
+  </div>
+</div>
+
+<script>
+  import {
+    deriveHomeScrollProgress,
+    getHomeScrollState,
+    shouldUseNaturalHomeScroll,
+  } from '../../utils/home-scroll';
+
+  const root = document.querySelector<HTMLElement>('[data-home-scroll-scene]');
+  const sticky = root?.querySelector<HTMLElement>('[data-home-scroll-visual]');
+  const profileLayer = root?.querySelector<HTMLElement>('[data-home-profile-layer]');
+
+  if (root && sticky) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const shortViewport = window.matchMedia(
+      '(max-height: 38rem) and (orientation: landscape)',
+    );
+    const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
+    let frameId = 0;
+
+    const setProfileAvailability = (available: boolean) => {
+      if (!profileLayer) return;
+
+      profileLayer.toggleAttribute('inert', !available);
+      profileLayer.setAttribute('aria-hidden', String(!available));
+    };
+
+    const updateState = () => {
+      frameId = 0;
+
+      if (root.dataset.homeScrollMode !== 'enhanced') return;
+
+      const rootBox = root.getBoundingClientRect();
+      const stickyBox = sticky.getBoundingClientRect();
+      const progress = deriveHomeScrollProgress({
+        rootTop: rootBox.top,
+        rootHeight: rootBox.height,
+        stickyTop: Number.parseFloat(getComputedStyle(sticky).top) || stickyBox.top,
+        stickyHeight: stickyBox.height,
+      });
+      const state = getHomeScrollState(progress);
+
+      root.dataset.homeScrollStage = String(state.stage);
+      root.style.setProperty('--home-scroll-progress', state.progress.toFixed(4));
+      root.style.setProperty('--home-title-exit', state.titleExit.toFixed(4));
+      root.style.setProperty('--home-profile-enter', state.profileEnter.toFixed(4));
+      root.style.setProperty('--home-hero-exit', state.heroExit.toFixed(4));
+      setProfileAvailability(state.profileEnter >= 0.55 && state.heroExit < 0.94);
+    };
+
+    const scheduleUpdate = () => {
+      if (frameId || root.dataset.homeScrollMode !== 'enhanced') return;
+      frameId = window.requestAnimationFrame(updateState);
+    };
+
+    const applyMode = () => {
+      const natural = shouldUseNaturalHomeScroll({
+        reducedMotion: reducedMotion.matches,
+        shortViewport: shortViewport.matches,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        deviceMemory: navigatorWithMemory.deviceMemory,
+      });
+
+      if (natural) {
+        root.dataset.homeScrollMode = 'natural';
+        root.dataset.homeScrollStage = 'all';
+        root.removeAttribute('style');
+        setProfileAvailability(true);
+        return;
+      }
+
+      root.dataset.homeScrollMode = 'enhanced';
+      updateState();
+    };
+
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate, { passive: true });
+    reducedMotion.addEventListener('change', applyMode);
+    shortViewport.addEventListener('change', applyMode);
+    applyMode();
+  }
+</script>
+
+<style>
+  .home-scroll-scene {
+    --home-scroll-progress: 0;
+    --home-title-exit: 0;
+    --home-profile-enter: 1;
+    --home-hero-exit: 0;
+    position: relative;
+  }
+
+  .home-scroll-scene[data-home-scroll-mode='enhanced'] {
+    height: 260svh;
+  }
+
+  .home-scroll-scene[data-home-scroll-mode='enhanced'] .home-scroll-scene__sticky {
+    position: sticky;
+    top: var(--site-header-height);
+    height: calc(100svh - var(--site-header-height));
+    min-height: 36rem;
+    overflow: clip;
+    opacity: calc(1 - (var(--home-hero-exit) * 0.22));
+    transform: translate3d(0, calc(var(--home-hero-exit) * -3vh), 0);
+    transform-origin: center top;
+    will-change: opacity, transform;
+  }
+
+  .home-scroll-scene[data-home-scroll-mode='enhanced']
+    .home-scroll-scene__sticky
+    :global(.home-hero) {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  @media (max-width: 47.99rem) {
+    .home-scroll-scene[data-home-scroll-mode='enhanced'] {
+      height: 225svh;
+    }
+
+    .home-scroll-scene[data-home-scroll-mode='enhanced'] .home-scroll-scene__sticky {
+      transform: translate3d(0, calc(var(--home-hero-exit) * -2vh), 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce),
+    (max-height: 38rem) and (orientation: landscape) {
+    .home-scroll-scene[data-home-scroll-mode='enhanced'] {
+      height: auto;
+    }
+
+    .home-scroll-scene[data-home-scroll-mode='enhanced'] .home-scroll-scene__sticky {
+      position: relative;
+      top: auto;
+      height: auto;
+      min-height: 0;
+      overflow: visible;
+      opacity: 1;
+      transform: none;
+      will-change: auto;
+    }
+  }
+</style>

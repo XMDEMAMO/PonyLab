@@ -1,21 +1,23 @@
 # PonyLab
 
-PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P4。
+PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P5。
 
 ## 当前状态
 
-P4 已建立首页静态结构：
+P5 已在 P4 静态首页上完成三阶段滚动增强：
 
 - light/dark 两套完整首页场景图通过 `astro:assets` 生成响应式 AVIF/WebP；
-- 标题、终端最终态和普通头像个人名片按自然阅读顺序输出；
-- 当前主题只使用一个活动图片实例，滚动不会改变图片的裁切、位置、变换或滤镜；
+- `HomeScrollScene` 使用单个 `requestAnimationFrame` 调度器，将滚动几何映射为可测试的三阶段进度；
+- 阶段一显示标题和终端，阶段二让它们退出并显示普通头像个人名片，阶段三让完整主视觉随 sticky 区域结束而离场并衔接文章区；
+- 当前主题只使用一个活动图片实例；阶段一与阶段二不会改变图片的裁切、位置、变换、亮度、饱和度、模糊或滤镜，也不会重复请求大图；
+- reduced motion、低高度横屏和受限设备使用自然流，标题、名片与内容在无 JavaScript 时仍按完整阅读顺序显示；
+- 手机端保留三阶段语义，并按 light/dark 构图分别把名片放在不会遮住主体面部的区域；
 - 首页文章区最多显示 4 篇非草稿文章，并统计已发布文章数与唯一 Tag 数；
-- 基础 `PostCard` 已建立，后续 P6 会在同一组件上扩展博客列表能力；
-- 没有 JavaScript 时仍能看到完整的标题、名片、内容区与日间场景降级图。
+- 基础 `PostCard` 已建立，后续 P6 会在同一组件上扩展博客列表能力。
 
 仓库目前只有一篇用于验证 Content Collection 的开发草稿，因此生产构建会正确显示首页文章空状态。不会为了填满首页而发布假文章或建立无效详情链接。
 
-尚未实施的核心阶段包括 P5 首页滚动增强、P6 博客浏览、P7 文章详情、P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
+尚未实施的核心阶段包括 P6 博客浏览、P7 文章详情、P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
 
 ## 技术基线
 
@@ -65,14 +67,14 @@ npm run preview
 
 `npm run build` 会通过 `prebuild` 再执行一次真实内容校验，并在 Astro 构建后移除未被页面引用的首页/默认封面母版，只保留实际使用的响应式输出。P9 尚未开始，所以 Pagefind 还未进入 build；到 P9 时它会成为同一 `npm run build` 的固定组成部分。
 
-Windows 本地环境如果遇到 Playwright 托管 `webServer` 在测试结束后等待退出的问题，可先启动 production preview，再使用既有外部预览模式：
+Playwright 直接调用 Astro CLI 启动 production preview，避免 Windows 上通过 npm 子进程托管服务器时退出等待。需要复用已启动的 production preview 时，可使用外部预览模式：
 
 ```powershell
 $env:PONYLAB_E2E_EXTERNAL_PREVIEW='1'
 npm run test:e2e
 ```
 
-具体原因和双终端验证方式见 [`docs/stage-reports/p3-global-shell-report.md`](docs/stage-reports/p3-global-shell-report.md)。CI 仍使用标准 `npm run test:e2e`。
+默认本地与 CI 都直接运行标准 `npm run test:e2e`；外部模式仅用于调试，不是正式验证的必需步骤。
 
 ## 开发服务器
 
@@ -146,7 +148,7 @@ public/favicon.ico
 src/
 ├─ assets/             本地图片源文件，由 astro:assets 优化
 ├─ components/global/  全局页面外壳组件
-├─ components/home/    P4 首页静态组件；P5 再加入滚动控制
+├─ components/home/    P4 静态首页与 P5 三阶段滚动控制
 ├─ components/blog/    首页与后续博客共用的 PostCard
 ├─ config/             类型化站点、首页、主题与 taxonomy 配置
 ├─ content/blog/       Markdown 文章
@@ -164,3 +166,4 @@ src/
 - [P2 内容基础汇报](docs/stage-reports/p2-content-foundation-report.md)
 - [P3 全局外壳汇报](docs/stage-reports/p3-global-shell-report.md)
 - [P4 首页静态结构汇报](docs/stage-reports/p4-home-static-report.md)
+- [P5 首页滚动增强汇报](docs/stage-reports/p5-home-scroll-report.md)

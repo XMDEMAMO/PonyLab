@@ -24,7 +24,7 @@ describe('P3 command and dependency boundary', () => {
       devDependencies: Record<string, string>;
     };
 
-    expect(packageJson.scripts['test:e2e']).toBe('playwright test');
+    expect(packageJson.scripts['test:e2e']).toBe('tsx scripts/run-e2e.ts');
     expect(packageJson.devDependencies).toHaveProperty('@playwright/test');
     expect(packageJson.scripts).not.toHaveProperty('build:search');
     expect(packageJson.devDependencies).not.toHaveProperty('pagefind');
