@@ -99,4 +99,28 @@ describe('homepage terminal configuration flow', () => {
     expect(terminalTyping).toContain('{session.output}');
     expect(terminalTyping).not.toContain('lines.map');
   });
+
+  it('defines the progressive-enhancement terminal contract', async () => {
+    const terminalTyping = await readProjectFile(
+      'src/components/home/TerminalTyping.astro',
+    );
+
+    expect(terminalTyping).toContain('data-terminal-typing-root');
+    expect(terminalTyping).toContain('data-terminal-state="fallback"');
+    expect(terminalTyping).toContain('data-terminal-session-index="0"');
+    expect(terminalTyping).toContain('data-terminal-enhanced');
+    expect(terminalTyping).toContain('data-terminal-sessions');
+    expect(terminalTyping).toContain('data-terminal-character-interval-ms');
+    expect(terminalTyping).toContain('data-terminal-output-delay-ms');
+    expect(terminalTyping).toContain('data-terminal-session-hold-ms');
+    expect(terminalTyping).toContain('data-terminal-transition-ms');
+    expect(terminalTyping).toContain('--terminal-transition-duration');
+    expect(terminalTyping).toContain('config.transitionMs');
+    expect(terminalTyping).toContain('class="visually-hidden"');
+    expect(terminalTyping).toContain('aria-hidden="true"');
+    expect(terminalTyping).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+    expect(terminalTyping).toContain("root.dataset.terminalState = 'static'");
+    expect(terminalTyping).toContain("root.dataset.terminalEnhanced === 'true'");
+    expect(terminalTyping).toContain('[...text]');
+  });
 });

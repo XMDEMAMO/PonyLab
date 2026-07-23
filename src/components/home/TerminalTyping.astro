@@ -7,17 +7,96 @@ export interface Props {
 
 const { config } = Astro.props;
 const session = config.sessions[0];
+const sessionSummary = config.sessions
+  .map(({ command, output }) => `${command}；${output}`)
+  .join('。');
 ---
 
-<div class="terminal" aria-label="终端状态">
+<div
+  class="terminal"
+  aria-label="终端状态"
+  style={`--terminal-transition-duration: ${config.transitionMs}ms`}
+  data-terminal-typing-root
+  data-terminal-state="fallback"
+  data-terminal-session-index="0"
+  data-terminal-enhanced="false"
+  data-terminal-sessions={JSON.stringify(config.sessions)}
+  data-terminal-character-interval-ms={config.characterIntervalMs}
+  data-terminal-output-delay-ms={config.outputDelayMs}
+  data-terminal-session-hold-ms={config.sessionHoldMs}
+  data-terminal-transition-ms={config.transitionMs}
+>
+  <span class="visually-hidden">终端会依次显示：{sessionSummary}</span>
   <div class="terminal__bar" aria-hidden="true">
     <span></span><span></span><span></span>
   </div>
-  <div class="terminal__content">
-    <p class="terminal__prompt">{session.command}</p>
-    <p>{session.output}</p>
+  <div class="terminal__content" aria-hidden="true">
+    <p class="terminal__prompt"><span data-terminal-command>{session.command}</span><span class="terminal__cursor"></span></p>
+    <p><span data-terminal-output>{session.output}</span></p>
   </div>
 </div>
+
+<script>
+  type TerminalSession = {
+    command: string;
+    output: string;
+  };
+
+  const wait = (duration: number): Promise<void> => new Promise((resolve) => {
+    window.setTimeout(resolve, duration);
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-terminal-typing-root]').forEach((root) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.dataset.terminalState = 'static';
+      return;
+    }
+    if (root.dataset.terminalEnhanced === 'true') return;
+    root.dataset.terminalEnhanced = 'true';
+
+    const command = root.querySelector<HTMLElement>('[data-terminal-command]');
+    const output = root.querySelector<HTMLElement>('[data-terminal-output]');
+    const sessions = JSON.parse(root.dataset.terminalSessions ?? '[]') as TerminalSession[];
+    const characterIntervalMs = Number(root.dataset.terminalCharacterIntervalMs);
+    const outputDelayMs = Number(root.dataset.terminalOutputDelayMs);
+    const sessionHoldMs = Number(root.dataset.terminalSessionHoldMs);
+    const transitionMs = Number(root.dataset.terminalTransitionMs);
+
+    if (!command || !output || sessions.length === 0) return;
+
+    const typeText = async (target: HTMLElement, text: string): Promise<void> => {
+      target.textContent = '';
+      for (const character of [...text]) {
+        target.textContent += character;
+        await wait(characterIntervalMs);
+      }
+    };
+
+    const run = async (): Promise<void> => {
+      let index = 0;
+
+      while (true) {
+        const currentSession = sessions[index];
+        root.dataset.terminalSessionIndex = String(index);
+        root.dataset.terminalState = 'typing-command';
+        await typeText(command, currentSession.command);
+
+        root.dataset.terminalState = 'typing-output';
+        await wait(outputDelayMs);
+        await typeText(output, currentSession.output);
+
+        root.dataset.terminalState = 'holding';
+        await wait(sessionHoldMs);
+
+        root.dataset.terminalState = 'transitioning';
+        await wait(transitionMs);
+        index = (index + 1) % sessions.length;
+      }
+    };
+
+    void run();
+  });
+</script>
 
 <style>
   .terminal {
@@ -52,18 +131,51 @@ const session = config.sessions[0];
   .terminal__content {
     min-height: 5.4rem;
     padding: 0.85rem 1rem 1rem;
+    overflow-wrap: anywhere;
     font-family: var(--font-mono);
     font-size: clamp(0.76rem, 1.4vw, 0.9rem);
     line-height: 1.65;
+    transition: opacity var(--terminal-transition-duration) ease;
   }
 
   .terminal__prompt {
     color: #d7c766;
   }
 
+  .terminal__cursor {
+    display: inline-block;
+    width: 0.55ch;
+    height: 1em;
+    margin-left: 0.12ch;
+    vertical-align: -0.12em;
+    background: currentColor;
+    animation: terminal-cursor 900ms steps(1, end) infinite;
+  }
+
+  [data-terminal-state='transitioning'] .terminal__content {
+    opacity: 0;
+  }
+
+  @keyframes terminal-cursor {
+    50% { opacity: 0; }
+  }
+
   @media (max-width: 47.99rem) {
     .terminal {
       width: min(78%, 18rem);
+    }
+
+    .terminal__content {
+      box-sizing: border-box;
+      block-size: 6.9rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal__content,
+    .terminal__cursor {
+      animation: none;
+      transition: none;
     }
   }
 </style>
