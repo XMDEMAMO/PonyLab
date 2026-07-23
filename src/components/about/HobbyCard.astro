@@ -1,0 +1,114 @@
+---
+import { Image } from 'astro:assets';
+
+import type { HobbyRecord } from '../../types/showcase';
+
+export interface Props {
+  hobby: HobbyRecord;
+  index: number;
+}
+
+const { hobby, index } = Astro.props;
+---
+
+<article class="hobby-card" data-hobby-card role="listitem">
+  <figure>
+    <Image
+      src={hobby.image}
+      alt={hobby.imageAlt}
+      widths={[360, 540, 720]}
+      sizes="(max-width: 40rem) calc(100vw - 2rem), (max-width: 64rem) 45vw, 24rem"
+      format="webp"
+      quality={72}
+      loading="lazy"
+      style={`object-position: ${hobby.objectPosition ?? '50% 50%'}`}
+    />
+    <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+    {hobby.isPlaceholder && <small>待替换</small>}
+  </figure>
+  <div>
+    <h3>{hobby.name}</h3>
+    <p>{hobby.summary}</p>
+  </div>
+</article>
+
+<style>
+  .hobby-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--duration-normal) var(--ease-emphasized);
+  }
+
+  figure {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-bg-elevated);
+  }
+
+  figure::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 58%, rgb(5 13 19 / 58%));
+    content: '';
+    pointer-events: none;
+  }
+
+  figure :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 520ms var(--ease-emphasized);
+  }
+
+  figure > span {
+    position: absolute;
+    z-index: 1;
+    bottom: var(--space-3);
+    left: var(--space-4);
+    color: #edf5f7;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+
+  figure > small {
+    position: absolute;
+    z-index: 2;
+    top: var(--space-3);
+    right: var(--space-3);
+    padding: 0.25rem 0.55rem;
+    color: #edf5f7;
+    border: 1px solid rgb(255 255 255 / 24%);
+    border-radius: var(--radius-pill);
+    background: rgb(8 18 25 / 62%);
+    font-size: 0.66rem;
+  }
+
+  .hobby-card > div { padding: var(--space-4); }
+
+  h3 {
+    font-size: 1.08rem;
+    line-height: 1.3;
+  }
+
+  p {
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hobby-card:hover { transform: translateY(-0.3rem); }
+    .hobby-card:hover figure :global(img) { transform: scale(1.035); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hobby-card,
+    figure :global(img) { transition: none; }
+  }
+</style>

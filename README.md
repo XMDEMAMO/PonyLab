@@ -1,8 +1,17 @@
 # PonyLab
 
-PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P7。
+PonyLab 是一个使用 Astro 构建的静态个人博客，计划用于技术文章、学习记录、项目展示与个人兴趣。项目按 [`docs/development-plan.md`](docs/development-plan.md) 分阶段实施，当前已完成 P1—P8。
 
 ## 当前状态
+
+P8 项目与个人展示页已经完成：
+
+- `/projects/` 使用类型化数据输出 4 条项目记录，提供项目类型计数、三/二/一列响应式网格和渐进增强筛选；关闭 JavaScript 时仍显示全部项目；
+- 精选 PonyLab 项目复用同一项目卡组件，在宽屏跨两列展示；项目外链、状态、技术栈和占位标记均由数据驱动，没有创建项目详情路由；
+- `/about/` 包含作者身份卡、当前状态终端，以及作品、角色和游戏三组爱好展柜，每组 3 项；作者基础资料继续复用站点配置；
+- 首页既有 `SiteStats` 已在项目数据建立后接入项目数量，当前统计文章、Tag 和项目三项；
+- 当前项目与爱好图片使用最低开发占位档的通用封面，并以 16:10、4:3 固定容器验证正式接口；后续替换数据与素材不需要改动页面布局；
+- P8 没有增加依赖、Pagefind、ClientRouter、音乐播放器、右侧滚动控件或前端框架。
 
 P7 嵌套文章阅读体验已经完成：
 
@@ -34,7 +43,7 @@ P6 博客浏览继续保持以下约束：
 
 仓库目前有一篇用于验证 Content Collection 和文章阅读链路的已发布开发记录；首页与博客会链接到它的真实嵌套详情路由。不会为了填满首页而发布假文章。
 
-尚未实施的核心阶段包括 P8 项目/About、P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
+尚未实施的核心阶段包括 P9 Pagefind、P12 可访问性收尾与 P13 部署准备。ClientRouter/音乐（P10）和右侧滚动控件（P11）仍是可选增强，不阻塞核心 V1。
 
 ## 技术基线
 
@@ -146,6 +155,9 @@ pinned: false
 - `src/config/home.ts`：首页文案、终端文本、文章数量、light/dark 场景焦点、静态裁切与蒙版；
 - `src/config/theme.ts`：主题模式、存储 key 和浏览器 theme-color；
 - `src/config/taxonomy.ts`：分类与 Tag 显示名到 URL slug 的映射。
+- `src/config/about.ts`：About 页文案、身份字段与当前状态；
+- `src/data/projects.ts`：项目记录、状态和类型元数据；
+- `src/data/hobbies.ts`：作品、角色和游戏爱好展柜数据。
 
 当前最低素材档使用以下路径：
 
@@ -169,10 +181,13 @@ src/
 ├─ components/home/    P4 静态首页与 P5 三阶段滚动控制
 ├─ components/blog/    共用文章卡、筛选、分页、空状态与归档组件
 ├─ components/article/ 文章头部、目录、代码增强与前后篇组件
-├─ config/             类型化站点、首页、主题与 taxonomy 配置
+├─ components/projects/项目筛选、网格与卡片
+├─ components/about/   作者资料、当前状态与爱好展柜
+├─ config/             类型化站点、首页、主题、About 与 taxonomy 配置
 ├─ content/blog/       Markdown 文章
+├─ data/               项目与爱好等非文章展示数据
 ├─ layouts/            全局布局与文章阅读布局
-├─ pages/              首页、博客、嵌套文章、Tag、分类与归档等路由入口
+├─ pages/              首页、博客、文章、分类、归档、项目与 About 等路由入口
 ├─ styles/             reset、tokens、全局样式与文章正文样式
 ├─ types/              跨模块数据类型
 └─ utils/              路径、内容、日期、阅读时间、首页和博客纯函数
@@ -188,3 +203,4 @@ src/
 - [P5 首页滚动增强汇报](docs/stage-reports/p5-home-scroll-report.md)
 - [P6 博客浏览汇报](docs/stage-reports/p6-blog-browsing-report.md)
 - [P7 文章阅读汇报](docs/stage-reports/p7-article-reading-report.md)
+- [P8 项目与个人页汇报](docs/stage-reports/p8-projects-about-report.md)

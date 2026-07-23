@@ -47,6 +47,7 @@ export interface HomeConfig {
     title: string;
     postLabel: string;
     tagLabel: string;
+    projectLabel: string;
   };
 }
 
@@ -99,5 +100,6 @@ export const homeConfig = {
     title: '此刻的 PonyLab',
     postLabel: '已发布文章',
     tagLabel: '主题标签',
+    projectLabel: '项目记录',
   },
 } as const satisfies HomeConfig;

@@ -10,6 +10,7 @@ import ProfileCard from '../components/home/ProfileCard.astro';
 import SiteStats from '../components/home/SiteStats.astro';
 import { homeConfig } from '../config/home';
 import { siteConfig } from '../config/site';
+import { projects } from '../data/projects';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getHomePostStats, selectHomePosts } from '../utils/home';
 import { sitePaths } from '../utils/paths';
@@ -69,8 +70,10 @@ const postStats = getHomePostStats(allPosts);
       title={homeConfig.stats.title}
       postCount={postStats.postCount}
       tagCount={postStats.tagCount}
+      projectCount={projects.length}
       postLabel={homeConfig.stats.postLabel}
       tagLabel={homeConfig.stats.tagLabel}
+      projectLabel={homeConfig.stats.projectLabel}
     />
   </div>
 </BaseLayout>

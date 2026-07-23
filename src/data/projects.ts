@@ -1,0 +1,85 @@
+import defaultCover from '../assets/placeholders/default-cover.jpg';
+import type {
+  ProjectRecord,
+  ProjectStatus,
+  ProjectType,
+} from '../types/showcase';
+
+export const projectTypeMeta = {
+  web: { label: '网站', shortLabel: 'Web' },
+  tool: { label: '工具', shortLabel: 'Tool' },
+  experiment: { label: '实验', shortLabel: 'Lab' },
+} as const satisfies Record<ProjectType, { label: string; shortLabel: string }>;
+
+export const projectStatusMeta = {
+  active: { label: '持续迭代', tone: 'active' },
+  complete: { label: '已完成', tone: 'complete' },
+  concept: { label: '概念阶段', tone: 'concept' },
+  paused: { label: '暂时搁置', tone: 'paused' },
+} as const satisfies Record<ProjectStatus, { label: string; tone: string }>;
+
+export const projects = [
+  {
+    slug: 'ponylab',
+    name: 'PonyLab',
+    description: '以 Astro 构建的个人实验室，用于整理技术文章、项目实践与兴趣档案。',
+    cover: defaultCover,
+    coverAlt: 'PonyLab 当前使用的通用占位插画',
+    status: 'active',
+    type: 'web',
+    stack: ['Astro', 'TypeScript', 'CSS'],
+    github: 'https://github.com/XMDEMAMO/PonyLab',
+    demo: 'https://xmdemamo.github.io/PonyLab/',
+    featured: true,
+    order: 1,
+    objectPosition: '50% 47%',
+  },
+  {
+    slug: 'project-placeholder-02',
+    name: '项目名称待填写 02',
+    description: '项目简介待填写。正式内容到位后只替换这条类型化数据和对应封面。',
+    cover: defaultCover,
+    coverAlt: '项目封面待替换，当前使用通用占位插画',
+    status: 'concept',
+    type: 'tool',
+    stack: ['技术栈待填写'],
+    github: null,
+    demo: null,
+    featured: false,
+    order: 2,
+    objectPosition: '30% 48%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'project-placeholder-03',
+    name: '项目名称待填写 03',
+    description: '项目简介待填写。卡片比例、筛选字段和外链接口已经固定。',
+    cover: defaultCover,
+    coverAlt: '项目封面待替换，当前使用通用占位插画',
+    status: 'paused',
+    type: 'experiment',
+    stack: ['技术栈待填写'],
+    github: null,
+    demo: null,
+    featured: false,
+    order: 3,
+    objectPosition: '66% 50%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'project-placeholder-04',
+    name: '项目名称待填写 04',
+    description: '项目简介待填写。未来替换素材不会改变项目网格或组件接口。',
+    cover: defaultCover,
+    coverAlt: '项目封面待替换，当前使用通用占位插画',
+    status: 'complete',
+    type: 'web',
+    stack: ['技术栈待填写'],
+    github: null,
+    demo: null,
+    featured: false,
+    order: 4,
+    objectPosition: '78% 50%',
+    isPlaceholder: true,
+  },
+] as const satisfies readonly ProjectRecord[];

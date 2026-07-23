@@ -1,0 +1,139 @@
+---
+import { projectTypeMeta } from '../../data/projects';
+import type { ProjectType } from '../../types/showcase';
+
+export interface Props {
+  counts: readonly { type: ProjectType; count: number }[];
+  total: number;
+}
+
+const { counts, total } = Astro.props;
+---
+
+<section class="project-explorer" data-project-explorer data-project-total={total}>
+  {total > 0 && <div class="project-filter" data-project-filter hidden>
+    <div class="project-filter__buttons" role="group" aria-label="项目类型筛选">
+      <button type="button" data-project-filter-value="all" aria-pressed="true">
+        全部 <span>{total}</span>
+      </button>
+      {counts.map(({ type, count }) => (
+        <button type="button" data-project-filter-value={type} aria-pressed="false">
+          {projectTypeMeta[type].label} <span>{count}</span>
+        </button>
+      ))}
+    </div>
+    <p class="project-filter__status" data-project-filter-status aria-live="polite">
+      当前显示全部 {total} 个项目。
+    </p>
+  </div>}
+  <slot />
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-project-explorer]').forEach((root) => {
+    if (root.dataset.enhanced === 'true') return;
+
+    const filter = root.querySelector<HTMLElement>('[data-project-filter]');
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-project-filter-value]')];
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-project-card]')];
+    const status = root.querySelector<HTMLElement>('[data-project-filter-status]');
+    if (!filter || !status || buttons.length === 0) return;
+
+    root.dataset.enhanced = 'true';
+    filter.hidden = false;
+
+    const applyFilter = (value: string) => {
+      let visibleCount = 0;
+
+      for (const card of cards) {
+        const visible = value === 'all' || card.dataset.projectType === value;
+        card.hidden = !visible;
+        if (visible) visibleCount += 1;
+      }
+
+      for (const button of buttons) {
+        button.setAttribute(
+          'aria-pressed',
+          String(button.dataset.projectFilterValue === value),
+        );
+      }
+
+      const label = value === 'all'
+        ? '全部'
+        : buttons.find((button) => button.dataset.projectFilterValue === value)
+          ?.childNodes[0]?.textContent?.trim() ?? value;
+      status.textContent = `当前显示${label}项目 ${visibleCount} 个。`;
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        applyFilter(button.dataset.projectFilterValue ?? 'all');
+      });
+    });
+  });
+</script>
+
+<style>
+  .project-explorer {
+    display: grid;
+    gap: var(--space-8);
+    padding-bottom: clamp(4rem, 10vw, 8rem);
+  }
+
+  .project-filter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface) 76%, transparent);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(0.8rem);
+  }
+
+  .project-filter__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  button {
+    min-height: 2.65rem;
+    padding-inline: var(--space-4);
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  button span {
+    margin-left: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+  }
+
+  button[aria-pressed='true'] {
+    color: var(--color-text);
+    border-color: var(--color-border);
+    background: var(--color-bg-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .project-filter__status {
+    flex: 0 0 auto;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  @media (max-width: 47.99rem) {
+    .project-filter { align-items: stretch; flex-direction: column; }
+    .project-filter__status { padding-inline: var(--space-2); }
+  }
+</style>

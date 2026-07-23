@@ -1,0 +1,260 @@
+---
+import { Image } from 'astro:assets';
+
+import { projectStatusMeta, projectTypeMeta } from '../../data/projects';
+import type { ProjectRecord } from '../../types/showcase';
+import { isSafeExternalUrl } from '../../utils/links';
+
+export interface Props {
+  project: ProjectRecord;
+  index: number;
+}
+
+const { project, index } = Astro.props;
+const type = projectTypeMeta[project.type];
+const status = projectStatusMeta[project.status];
+const recordNumber = String(index + 1).padStart(2, '0');
+const githubUrl = isSafeExternalUrl(project.github) ? project.github : null;
+const demoUrl = isSafeExternalUrl(project.demo) ? project.demo : null;
+---
+
+<article
+  class:list={['project-card', { 'project-card--featured': project.featured }]}
+  data-project-card
+  data-project-type={project.type}
+  role="listitem"
+>
+  <figure class="project-card__visual">
+    <Image
+      src={project.cover}
+      alt={project.coverAlt}
+      widths={[480, 720, 960]}
+      sizes={project.featured
+        ? '(max-width: 48rem) calc(100vw - 2rem), 54rem'
+        : '(max-width: 48rem) calc(100vw - 2rem), 25rem'}
+      format="webp"
+      quality={74}
+      loading="lazy"
+      style={`object-position: ${project.objectPosition ?? '50% 50%'}`}
+    />
+    <div class="project-card__visual-meta" aria-hidden="true">
+      <span>LAB / {recordNumber}</span>
+      <span>{type.shortLabel}</span>
+    </div>
+    {project.isPlaceholder && <span class="project-card__placeholder">素材待替换</span>}
+  </figure>
+
+  <div class="project-card__body">
+    <div class="project-card__meta">
+      <span class:list={['project-card__status', `project-card__status--${status.tone}`]}>
+        <span aria-hidden="true"></span>{status.label}
+      </span>
+      <span>{type.label}</span>
+    </div>
+
+    <h2>{project.name}</h2>
+    <p class="project-card__description">{project.description}</p>
+
+    <ul class="project-card__stack" role="list" aria-label={`${project.name} 技术栈`}>
+      {project.stack.map((item) => <li>{item}</li>)}
+    </ul>
+
+    <footer class="project-card__actions">
+      {githubUrl && (
+        <a href={githubUrl} target="_blank" rel="noopener noreferrer">
+          源代码 <span aria-hidden="true">↗</span>
+          <span class="visually-hidden">（在新窗口打开）</span>
+        </a>
+      )}
+      {demoUrl && (
+        <a href={demoUrl} target="_blank" rel="noopener noreferrer">
+          在线查看 <span aria-hidden="true">↗</span>
+          <span class="visually-hidden">（在新窗口打开）</span>
+        </a>
+      )}
+      {!githubUrl && !demoUrl && <span>链接待补充</span>}
+    </footer>
+  </div>
+</article>
+
+<style>
+  .project-card {
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+    box-shadow: var(--shadow-card);
+    transition:
+      border-color var(--duration-normal) var(--ease-standard),
+      transform var(--duration-normal) var(--ease-emphasized);
+  }
+
+  .project-card__visual {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-bg-elevated);
+  }
+
+  .project-card__visual::after {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, transparent 56%, rgb(4 12 18 / 64%)),
+      linear-gradient(120deg, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent 45%);
+    content: '';
+    pointer-events: none;
+  }
+
+  .project-card__visual :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 520ms var(--ease-emphasized);
+  }
+
+  .project-card__visual-meta {
+    position: absolute;
+    z-index: 1;
+    right: var(--space-4);
+    bottom: var(--space-3);
+    left: var(--space-4);
+    display: flex;
+    justify-content: space-between;
+    color: #f2f7f8;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .project-card__placeholder {
+    position: absolute;
+    z-index: 2;
+    top: var(--space-3);
+    right: var(--space-3);
+    padding: 0.3rem 0.62rem;
+    color: #f2f7f8;
+    border: 1px solid rgb(255 255 255 / 28%);
+    border-radius: var(--radius-pill);
+    background: rgb(10 20 28 / 62%);
+    font-size: 0.68rem;
+    backdrop-filter: blur(0.6rem);
+  }
+
+  .project-card__body {
+    display: grid;
+    align-content: start;
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+  }
+
+  .project-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .project-card__status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .project-card__status > span {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+    box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+  }
+
+  .project-card__status--active > span { background: #69ad91; }
+  .project-card__status--complete > span { background: var(--color-accent); }
+  .project-card__status--concept > span { background: var(--color-accent-warm); }
+
+  h2 {
+    margin-top: var(--space-4);
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+
+  .project-card__description {
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+    line-height: 1.75;
+  }
+
+  .project-card__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-5, 1.25rem);
+  }
+
+  .project-card__stack li {
+    padding: 0.3rem 0.65rem;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-bg-elevated) 72%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+  }
+
+  .project-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .project-card__actions a,
+  .project-card__actions > span {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-elevated);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .project-card__actions > span { color: var(--color-text-muted); }
+
+  @media (min-width: 64rem) {
+    .project-card--featured {
+      grid-column: span 2;
+      grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.8fr);
+    }
+
+    .project-card--featured .project-card__visual { aspect-ratio: auto; }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .project-card:hover {
+      border-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-border));
+      transform: translateY(-0.35rem);
+    }
+
+    .project-card:hover .project-card__visual :global(img) { transform: scale(1.025); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .project-card,
+    .project-card__visual :global(img) { transition: none; }
+  }
+</style>

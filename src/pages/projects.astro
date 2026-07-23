@@ -1,0 +1,34 @@
+---
+import PageHeader from '../components/global/PageHeader.astro';
+import ProjectFilter from '../components/projects/ProjectFilter.astro';
+import ProjectGrid from '../components/projects/ProjectGrid.astro';
+import { projects } from '../data/projects';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getProjectTypeCounts, sortProjects } from '../utils/projects';
+
+const sortedProjects = sortProjects(projects);
+const typeCounts = getProjectTypeCounts(sortedProjects);
+---
+
+<BaseLayout
+  title="项目"
+  description="浏览 PonyLab 的项目实践、工具与实验记录。"
+  pageClass="projects-page"
+>
+  <div class="page-shell projects-page__shell">
+    <PageHeader
+      eyebrow="Laboratory / Projects"
+      title="项目"
+      subtitle="把正在迭代、已经完成和仍处于概念阶段的实践放在同一张实验记录墙上。"
+      count={projects.length}
+    />
+
+    <ProjectFilter counts={typeCounts} total={projects.length}>
+      <ProjectGrid projects={sortedProjects} />
+    </ProjectFilter>
+  </div>
+</BaseLayout>
+
+<style>
+  .projects-page__shell { display: grid; }
+</style>

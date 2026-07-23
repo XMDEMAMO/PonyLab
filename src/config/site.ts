@@ -1,5 +1,6 @@
 import authorAvatar from '../assets/brand/author-avatar.jpg';
 import SiteLogo from '../assets/brand/site-logo.svg';
+import type { HttpUrl } from '../utils/links';
 
 export type SiteLanguage = 'zh-CN';
 
@@ -10,7 +11,7 @@ export interface NavigationItem {
 
 export interface SocialLink {
   label: string;
-  href: string | null;
+  href: HttpUrl | null;
   isPlaceholder: boolean;
 }
 

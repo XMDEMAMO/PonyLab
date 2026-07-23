@@ -1,0 +1,117 @@
+---
+import { hobbyTypeMeta } from '../../data/hobbies';
+import type { HobbyRecord, HobbyType } from '../../types/showcase';
+import HobbyCard from './HobbyCard.astro';
+
+export interface Props {
+  hobbies: readonly HobbyRecord[];
+  eyebrow: string;
+  title: string;
+  description: string;
+}
+
+const { hobbies, eyebrow, title, description } = Astro.props;
+const types = Object.keys(hobbyTypeMeta) as HobbyType[];
+---
+
+<section class="hobby-showcase" aria-labelledby="hobby-showcase-title">
+  <header class="hobby-showcase__header">
+    <p>{eyebrow}</p>
+    <h2 id="hobby-showcase-title">{title}</h2>
+    <span>{description}</span>
+  </header>
+
+  <div class="hobby-showcase__groups">
+    {types.map((type) => {
+      const meta = hobbyTypeMeta[type];
+      const items = hobbies.filter((hobby) => hobby.type === type);
+
+      return (
+        <section class="hobby-group" aria-labelledby={`hobby-group-${type}`}>
+          <header>
+            <div>
+              <p>{meta.eyebrow}</p>
+              <h3 id={`hobby-group-${type}`}>{meta.label}</h3>
+            </div>
+            <span>{meta.description}</span>
+          </header>
+          <div class="hobby-group__grid" role="list">
+            {items.map((hobby, index) => <HobbyCard hobby={hobby} index={index} />)}
+          </div>
+        </section>
+      );
+    })}
+  </div>
+</section>
+
+<style>
+  .hobby-showcase { display: grid; gap: var(--space-12); }
+
+  .hobby-showcase__header > p,
+  .hobby-group header p {
+    color: var(--color-accent-warm);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .hobby-showcase__header h2 {
+    margin-top: var(--space-3);
+    font-size: clamp(2rem, 6vw, 4rem);
+    line-height: 1.04;
+    letter-spacing: -0.05em;
+  }
+
+  .hobby-showcase__header > span {
+    display: block;
+    max-width: 44rem;
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+  }
+
+  .hobby-showcase__groups { display: grid; gap: clamp(3rem, 8vw, 6rem); }
+
+  .hobby-group {
+    display: grid;
+    grid-template-columns: minmax(10rem, 0.28fr) minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3rem);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .hobby-group > header h3 {
+    margin-top: var(--space-2);
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.15;
+  }
+
+  .hobby-group > header > span {
+    display: block;
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+  }
+
+  .hobby-group__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 63.99rem) {
+    .hobby-group { grid-template-columns: 1fr; }
+    .hobby-group > header { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .hobby-group > header > span { margin-top: 0; }
+  }
+
+  @media (max-width: 47.99rem) {
+    .hobby-group__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 31.99rem) {
+    .hobby-group > header { grid-template-columns: 1fr; }
+    .hobby-group__grid { grid-template-columns: 1fr; }
+  }
+</style>

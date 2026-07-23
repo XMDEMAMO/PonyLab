@@ -1,0 +1,116 @@
+import defaultCover from '../assets/placeholders/default-cover.jpg';
+import type { HobbyRecord, HobbyType } from '../types/showcase';
+
+export const hobbyTypeMeta = {
+  works: {
+    label: '喜欢的作品',
+    eyebrow: 'Stories / 01',
+    description: '会反复想起的作品与世界观。',
+  },
+  characters: {
+    label: '喜欢的角色',
+    eyebrow: 'Characters / 02',
+    description: '在设计、叙事或气质上留下印象的角色。',
+  },
+  games: {
+    label: '正在玩的游戏',
+    eyebrow: 'Games / 03',
+    description: '偶尔离开编辑器时，会打开的游戏与互动世界。',
+  },
+} as const satisfies Record<
+  HobbyType,
+  { label: string; eyebrow: string; description: string }
+>;
+
+export const hobbies = [
+  {
+    slug: 'work-placeholder-01',
+    type: 'works',
+    name: '作品条目待填写 01',
+    image: defaultCover,
+    imageAlt: '作品图片待替换，当前使用通用占位插画',
+    summary: '作品简短说明待填写。',
+    objectPosition: '34% 48%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'work-placeholder-02',
+    type: 'works',
+    name: '作品条目待填写 02',
+    image: defaultCover,
+    imageAlt: '作品图片待替换，当前使用通用占位插画',
+    summary: '作品简短说明待填写。',
+    objectPosition: '52% 48%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'work-placeholder-03',
+    type: 'works',
+    name: '作品条目待填写 03',
+    image: defaultCover,
+    imageAlt: '作品图片待替换，当前使用通用占位插画',
+    summary: '作品简短说明待填写。',
+    objectPosition: '72% 48%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'character-placeholder-01',
+    type: 'characters',
+    name: '角色条目待填写 01',
+    image: defaultCover,
+    imageAlt: '角色图片待替换，当前使用通用占位插画',
+    summary: '角色简短说明待填写。',
+    objectPosition: '26% 52%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'character-placeholder-02',
+    type: 'characters',
+    name: '角色条目待填写 02',
+    image: defaultCover,
+    imageAlt: '角色图片待替换，当前使用通用占位插画',
+    summary: '角色简短说明待填写。',
+    objectPosition: '50% 52%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'character-placeholder-03',
+    type: 'characters',
+    name: '角色条目待填写 03',
+    image: defaultCover,
+    imageAlt: '角色图片待替换，当前使用通用占位插画',
+    summary: '角色简短说明待填写。',
+    objectPosition: '78% 52%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'game-placeholder-01',
+    type: 'games',
+    name: '游戏条目待填写 01',
+    image: defaultCover,
+    imageAlt: '游戏图片待替换，当前使用通用占位插画',
+    summary: '游戏简短说明待填写。',
+    objectPosition: '32% 46%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'game-placeholder-02',
+    type: 'games',
+    name: '游戏条目待填写 02',
+    image: defaultCover,
+    imageAlt: '游戏图片待替换，当前使用通用占位插画',
+    summary: '游戏简短说明待填写。',
+    objectPosition: '56% 46%',
+    isPlaceholder: true,
+  },
+  {
+    slug: 'game-placeholder-03',
+    type: 'games',
+    name: '游戏条目待填写 03',
+    image: defaultCover,
+    imageAlt: '游戏图片待替换，当前使用通用占位插画',
+    summary: '游戏简短说明待填写。',
+    objectPosition: '76% 46%',
+    isPlaceholder: true,
+  },
+] as const satisfies readonly HobbyRecord[];

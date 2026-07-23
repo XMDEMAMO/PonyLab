@@ -78,7 +78,7 @@ describe('P7 article reading boundary', () => {
     ]);
 
     expect(reportExists).toBe(true);
-    expect(readme).toContain('当前已完成 P1—P7');
+    expect(readme).toContain('P7 嵌套文章阅读体验已经完成');
     expect(readme).toContain('/blog/[...slug]/');
     expect(readme).toContain('remark-math');
   });

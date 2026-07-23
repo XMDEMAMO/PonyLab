@@ -4,8 +4,10 @@ export interface Props {
   title: string;
   postCount: number;
   tagCount: number;
+  projectCount: number;
   postLabel: string;
   tagLabel: string;
+  projectLabel: string;
 }
 
 const {
@@ -13,12 +15,15 @@ const {
   title,
   postCount,
   tagCount,
+  projectCount,
   postLabel,
   tagLabel,
+  projectLabel,
 } = Astro.props;
 const stats = [
   { label: postLabel, value: postCount },
   { label: tagLabel, value: tagCount },
+  { label: projectLabel, value: projectCount },
 ] as const;
 ---
 
@@ -71,7 +76,7 @@ const stats = [
 
   dl {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-3);
     margin: 0;
   }

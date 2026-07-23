@@ -1,0 +1,51 @@
+---
+import AboutProfile from '../components/about/AboutProfile.astro';
+import CurrentStatus from '../components/about/CurrentStatus.astro';
+import HobbyShowcase from '../components/about/HobbyShowcase.astro';
+import PageHeader from '../components/global/PageHeader.astro';
+import { aboutConfig } from '../config/about';
+import { siteConfig } from '../config/site';
+import { hobbies } from '../data/hobbies';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="关于"
+  description="PonyLab 作者简介、当前状态与个人爱好展柜。"
+  pageClass="about-page"
+>
+  <div class="page-shell about-page__shell">
+    <PageHeader
+      eyebrow={aboutConfig.eyebrow}
+      title={aboutConfig.title}
+      subtitle={aboutConfig.subtitle}
+    />
+
+    <AboutProfile
+      author={siteConfig.author}
+      role={aboutConfig.role}
+      location={aboutConfig.location}
+      note={aboutConfig.profileNote}
+      socials={siteConfig.socials}
+    />
+
+    <CurrentStatus {...aboutConfig.status} />
+
+    <HobbyShowcase
+      hobbies={hobbies}
+      eyebrow={aboutConfig.hobbies.eyebrow}
+      title={aboutConfig.hobbies.title}
+      description={aboutConfig.hobbies.description}
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .about-page__shell {
+    display: grid;
+    gap: clamp(4rem, 10vw, 8rem);
+    padding-bottom: clamp(5rem, 12vw, 9rem);
+  }
+
+  .about-page__shell :global(.page-header) { margin-bottom: calc(-1 * clamp(2rem, 5vw, 4rem)); }
+</style>
